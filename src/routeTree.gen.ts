@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CareerTipsRouteImport } from './routes/career-tips'
 import { Route as CompaniesRouteImport } from './routes/companies'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as JobsIndexRouteImport } from './routes/jobs.index'
@@ -50,6 +51,11 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/career-tips': typeof CareerTipsRoute
   '/companies': typeof CompaniesRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/career-tips': typeof CareerTipsRoute
   '/companies': typeof CompaniesRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/career-tips': typeof CareerTipsRoute
   '/companies': typeof CompaniesRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/career-tips'
     | '/companies'
     | '/contact'
+    | '/dashboard'
     | '/privacy'
     | '/terms'
     | '/jobs/$jobId'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/career-tips'
     | '/companies'
     | '/contact'
+    | '/dashboard'
     | '/privacy'
     | '/terms'
     | '/jobs/$jobId'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/career-tips'
     | '/companies'
     | '/contact'
+    | '/dashboard'
     | '/privacy'
     | '/terms'
     | '/jobs/$jobId'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   CareerTipsRoute: typeof CareerTipsRoute
   CompaniesRoute: typeof CompaniesRoute
   ContactRoute: typeof ContactRoute
+  DashboardRoute: typeof DashboardRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   JobsJobIdRoute: typeof JobsJobIdRoute
@@ -204,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/privacy': {
       id: '/privacy'
       path: '/privacy'
@@ -242,6 +262,7 @@ const rootRouteChildren: RootRouteChildren = {
   CareerTipsRoute: CareerTipsRoute,
   CompaniesRoute: CompaniesRoute,
   ContactRoute: ContactRoute,
+  DashboardRoute: DashboardRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   JobsJobIdRoute: JobsJobIdRoute,
