@@ -106,11 +106,12 @@ function EmployerPage() {
     },
   });
 
+  const jobIds = (jobs.data ?? []).map((j) => j.id);
+
   const applicants = useQuery({
-    queryKey: ["employer-applicants", company.data?.id],
-    enabled: !!company.data?.id,
+    queryKey: ["employer-applicants", company.data?.id, jobIds.join(",")],
+    enabled: !!company.data?.id && !jobs.isLoading,
     queryFn: async () => {
-      const jobIds = (jobs.data ?? []).map((j) => j.id);
       if (!jobIds.length) return [];
       const { data, error } = await supabase
         .from("applications")
@@ -121,6 +122,7 @@ function EmployerPage() {
       return data ?? [];
     },
   });
+
 
   const saveCompany = useMutation({
     mutationFn: async () => {
