@@ -346,28 +346,38 @@ function EmployerPage() {
             {applicants.data?.length === 0 ? <EmptyState title="No applicants yet" description="Applications to your vacancies will appear here." /> : null}
             <div className="grid gap-3">
               {applicants.data?.map((application) => (
-                <Card key={application.id} className="flex-row flex-wrap items-center justify-between gap-3 p-5 shadow-card">
-                  <div>
-                    <p className="font-semibold">{application.full_name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {(application.jobs as { title?: string } | null)?.title ?? "Job"} · {application.email}
-                      {application.phone ? ` · ${application.phone}` : ""}
+                <Card key={application.id} className="gap-3 p-5 shadow-card">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold">{application.full_name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {(application.jobs as { title?: string } | null)?.title ?? "Job"} · {application.email}
+                        {application.phone ? ` · ${application.phone}` : ""}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Applied {timeAgo(application.created_at)}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary">{statusLabel(application.status)}</Badge>
+                      <Button size="sm" variant="outline" onClick={() => void downloadCv(application.cv_url)}>
+                        <Download className="size-4" /> CV
+                      </Button>
+                      <Select value={application.status} onValueChange={(v) => setStatus.mutate({ id: application.id, status: v })}>
+                        <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {APPLICATION_STATUSES.map((s) => (
+                            <SelectItem key={s} value={s}>{statusLabel(s)}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  {application.cover_letter ? (
+                    <p className="whitespace-pre-line rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
+                      {application.cover_letter}
                     </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button size="sm" variant="outline" onClick={() => void downloadCv(application.cv_url)}>
-                      <Download className="size-4" /> CV
-                    </Button>
-                    <Select value={application.status} onValueChange={(v) => setStatus.mutate({ id: application.id, status: v })}>
-                      <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {APPLICATION_STATUSES.map((s) => (
-                          <SelectItem key={s} value={s}>{statusLabel(s)}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  ) : null}
                 </Card>
+
               ))}
             </div>
           </TabsContent>
