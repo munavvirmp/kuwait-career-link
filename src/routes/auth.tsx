@@ -63,7 +63,7 @@ function AuthPage() {
           password: form.password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
-            data: { full_name: form.fullName, account_type: accountType },
+            data: { full_name: form.fullName, role: accountType },
           },
         });
         if (error) throw error;
