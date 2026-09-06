@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   Building2,
@@ -23,7 +23,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { ErrorState, LoadingList } from "@/components/site/States";
 import { SaveJobButton } from "@/components/jobs/SaveJobButton";
 import { fetchJob } from "@/lib/api";
-import { formatSalary, timeAgo } from "@/lib/constants";
+import { formatSalary, statusLabel, timeAgo } from "@/lib/constants";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -298,7 +298,7 @@ function ApplyDialog({ jobId, jobTitle }: { jobId: string; jobTitle: string }) {
               <Link to="/auth" search={{ mode: "login" }}>Sign in to apply</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/auth" search={{ mode: "register" }}>Create a free account</Link>
+              <Link to="/auth" search={{ mode: "signup" }}>Create a free account</Link>
             </Button>
           </div>
         ) : done ? (
