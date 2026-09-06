@@ -67,18 +67,18 @@ const JOB_SELECT =
   "*, companies:company_id(id,name,industry,location,is_demo), categories:category_id(id,name,slug)";
 
 export type JobFilters = {
-  keyword?: string;
-  location?: string;
-  category?: string;
-  jobType?: string;
-  experience?: string;
-  education?: string;
-  salaryMin?: number;
-  salaryMax?: number;
-  postedWithinDays?: number;
-  sort?: "latest" | "salary_asc" | "salary_desc";
-  page?: number;
-  pageSize?: number;
+  keyword?: string | undefined;
+  location?: string | undefined;
+  category?: string | undefined;
+  jobType?: string | undefined;
+  experience?: string | undefined;
+  education?: string | undefined;
+  salaryMin?: number | undefined;
+  salaryMax?: number | undefined;
+  postedWithinDays?: number | undefined;
+  sort?: "latest" | "salary_asc" | "salary_desc" | undefined;
+  page?: number | undefined;
+  pageSize?: number | undefined;
 };
 
 export async function fetchJobs(filters: JobFilters = {}) {

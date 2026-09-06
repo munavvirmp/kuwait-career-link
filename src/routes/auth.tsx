@@ -11,12 +11,15 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-type AuthSearch = { mode?: "login" | "signup"; role?: "job_seeker" | "employer" };
+type AuthSearch = {
+  mode?: "login" | "signup" | undefined;
+  role?: "job_seeker" | "employer" | undefined;
+};
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>): AuthSearch => ({
-    mode: search.mode === "signup" ? "signup" : "login",
-    role: search.role === "employer" ? "employer" : "job_seeker",
+    mode: search["mode"] === "signup" ? "signup" : "login",
+    role: search["role"] === "employer" ? "employer" : "job_seeker",
   }),
   head: () => ({
     meta: [

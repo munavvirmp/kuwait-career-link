@@ -27,33 +27,33 @@ import {
 } from "@/lib/constants";
 
 type JobSearch = {
-  keyword?: string;
-  location?: string;
-  category?: string;
-  jobType?: string;
-  experience?: string;
-  education?: string;
-  salary?: string;
-  posted?: string;
-  sort?: "latest" | "salary_asc" | "salary_desc";
-  page?: number;
+  keyword?: string | undefined;
+  location?: string | undefined;
+  category?: string | undefined;
+  jobType?: string | undefined;
+  experience?: string | undefined;
+  education?: string | undefined;
+  salary?: string | undefined;
+  posted?: string | undefined;
+  sort?: "latest" | "salary_asc" | "salary_desc" | undefined;
+  page?: number | undefined;
 };
 
 const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
 
 export const Route = createFileRoute("/jobs/")({
   validateSearch: (search: Record<string, unknown>): JobSearch => ({
-    keyword: str(search.keyword),
-    location: str(search.location),
-    category: str(search.category),
-    jobType: str(search.jobType),
-    experience: str(search.experience),
-    education: str(search.education),
-    salary: str(search.salary),
-    posted: str(search.posted),
+    keyword: str(search["keyword"]),
+    location: str(search["location"]),
+    category: str(search["category"]),
+    jobType: str(search["jobType"]),
+    experience: str(search["experience"]),
+    education: str(search["education"]),
+    salary: str(search["salary"]),
+    posted: str(search["posted"]),
     sort:
-      search.sort === "salary_asc" || search.sort === "salary_desc" ? search.sort : "latest",
-    page: Number(search.page ?? 1) || 1,
+      search["sort"] === "salary_asc" || search["sort"] === "salary_desc" ? search["sort"] : "latest",
+    page: Number(search["page"] ?? 1) || 1,
   }),
   head: () => ({
     meta: [
