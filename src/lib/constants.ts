@@ -40,12 +40,13 @@ export const POSTED_WITHIN = [
 ];
 
 export const APPLICATION_STATUSES = [
-  "submitted",
-  "under_review",
+  "applied",
   "shortlisted",
+  "interview",
+  "selected",
   "rejected",
-  "hired",
 ] as const;
+
 
 export function statusLabel(status: string) {
   return status
