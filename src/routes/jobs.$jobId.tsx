@@ -178,40 +178,98 @@ function BulletSection({ title, items }: { title: string; items: string[] }) {
   );
 }
 
+const MAX_CV_BYTES = 10 * 1024 * 1024;
+
 function ApplyDialog({ jobId, jobTitle }: { jobId: string; jobTitle: string }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [done, setDone] = useState(false);
   const [form, setForm] = useState({ full_name: "", email: "", phone: "", cover_letter: "" });
   const [file, setFile] = useState<File | null>(null);
+  const [useSavedCv, setUseSavedCv] = useState(true);
+
+  const profile = useQuery({
+    queryKey: ["profile", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("*").eq("id", user!.id).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const existing = useQuery({
+    queryKey: ["application-exists", user?.id, jobId],
+    enabled: !!user && open,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("applications")
+        .select("id,status")
+        .eq("applicant_id", user!.id)
+        .eq("job_id", jobId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (!profile.data) return;
+    setForm((prev) => ({
+      ...prev,
+      full_name: prev.full_name || profile.data?.full_name || "",
+      email: prev.email || profile.data?.email || user?.email || "",
+      phone: prev.phone || profile.data?.phone || "",
+    }));
+  }, [profile.data, user?.email]);
+
+  const savedCv = profile.data?.cv_url ?? null;
 
   const apply = useMutation({
     mutationFn: async () => {
-      if (!form.full_name.trim()) throw new Error("Please enter your full name.");
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) throw new Error("Please enter a valid email address.");
-      if (!file) throw new Error("Please attach your CV (PDF, DOC or DOCX).");
-      const ext = file.name.split(".").pop()?.toLowerCase();
-      if (!ext || !["pdf", "doc", "docx"].includes(ext)) throw new Error("CV must be a PDF, DOC or DOCX file.");
       if (!user) throw new Error("Please sign in to apply for this job.");
+      const fullName = form.full_name.trim();
+      if (fullName.length < 2 || fullName.length > 100) throw new Error("Please enter your full name (2-100 characters).");
+      const email = form.email.trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 255)
+        throw new Error("Please enter a valid email address.");
+      const phone = form.phone.trim();
+      if (phone && !/^[+\d][\d\s-]{6,19}$/.test(phone)) throw new Error("Please enter a valid phone number.");
+      if (form.cover_letter.length > 3000) throw new Error("Cover letter must be under 3000 characters.");
 
-      const path = `${user.id}/${Date.now()}-${file.name.replace(/[^\w.-]/g, "_")}`;
-      const { error: uploadError } = await supabase.storage.from("cvs").upload(path, file, { upsert: true });
-      if (uploadError) throw new Error(uploadError.message);
+      let cvPath = useSavedCv && savedCv ? savedCv : null;
+      if (!cvPath) {
+        if (!file) throw new Error("Please attach your CV (PDF, DOC or DOCX).");
+        const ext = file.name.split(".").pop()?.toLowerCase();
+        if (!ext || !["pdf", "doc", "docx"].includes(ext)) throw new Error("CV must be a PDF, DOC or DOCX file.");
+        if (file.size > MAX_CV_BYTES) throw new Error("CV must be smaller than 10 MB.");
+        const path = `${user.id}/${Date.now()}-${file.name.replace(/[^\w.-]/g, "_")}`;
+        const { error: uploadError } = await supabase.storage.from("cvs").upload(path, file, { upsert: true });
+        if (uploadError) throw new Error("Could not upload your CV. Please try again.");
+        cvPath = path;
+      }
 
       const { error } = await supabase.from("applications").insert({
         job_id: jobId,
         applicant_id: user.id,
-        full_name: form.full_name,
-        email: form.email,
-        phone: form.phone || null,
-        cover_letter: form.cover_letter || null,
-        cv_url: path,
+        full_name: fullName,
+        email,
+        phone: phone || null,
+        cover_letter: form.cover_letter.trim() || null,
+        cv_url: cvPath,
+        status: "applied",
       });
-      if (error) throw new Error(error.message);
+      if (error) {
+        if (error.code === "23505") throw new Error("You have already applied for this job.");
+        throw new Error("Could not submit your application. Please try again.");
+      }
     },
     onSuccess: () => {
       setDone(true);
       toast.success("Application submitted successfully.");
+      void queryClient.invalidateQueries({ queryKey: ["my-applications"] });
+      void queryClient.invalidateQueries({ queryKey: ["application-exists", user?.id, jobId] });
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -231,11 +289,36 @@ function ApplyDialog({ jobId, jobTitle }: { jobId: string; jobTitle: string }) {
         <DialogHeader>
           <DialogTitle>{done ? "Application sent" : `Apply for ${jobTitle}`}</DialogTitle>
         </DialogHeader>
-        {done ? (
+        {loading ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">Loading…</p>
+        ) : !user ? (
+          <div className="grid gap-4 py-4 text-center">
+            <p className="text-sm text-muted-foreground">Please sign in to your job seeker account to apply for this job.</p>
+            <Button asChild>
+              <Link to="/auth" search={{ mode: "login" }}>Sign in to apply</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/auth" search={{ mode: "register" }}>Create a free account</Link>
+            </Button>
+          </div>
+        ) : done ? (
           <div className="grid gap-4 py-4 text-center">
             <CheckCircle2 className="mx-auto size-10 text-primary" />
             <p className="text-sm">Application submitted successfully.</p>
+            <p className="text-xs text-muted-foreground">You can track its status under Applied Jobs in your dashboard.</p>
+            <Button asChild variant="outline">
+              <Link to="/dashboard">Go to my dashboard</Link>
+            </Button>
             <Button onClick={() => setOpen(false)}>Close</Button>
+          </div>
+        ) : existing.data ? (
+          <div className="grid gap-4 py-4 text-center">
+            <CheckCircle2 className="mx-auto size-10 text-primary" />
+            <p className="text-sm">You already applied for this job.</p>
+            <p className="text-xs text-muted-foreground">Current status: {statusLabel(existing.data.status)}</p>
+            <Button asChild variant="outline">
+              <Link to="/dashboard">View my applications</Link>
+            </Button>
           </div>
         ) : (
           <form
@@ -257,22 +340,30 @@ function ApplyDialog({ jobId, jobTitle }: { jobId: string; jobTitle: string }) {
               <Label htmlFor="phone">Phone</Label>
               <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+965 ..." />
             </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="cv">CV (PDF, DOC, DOCX)</Label>
-              <Input id="cv" type="file" accept=".pdf,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-            </div>
+            {savedCv ? (
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={useSavedCv} onChange={(e) => setUseSavedCv(e.target.checked)} className="size-4" />
+                Use the CV saved on my profile{profile.data?.cv_name ? ` (${profile.data.cv_name})` : ""}
+              </label>
+            ) : null}
+            {!savedCv || !useSavedCv ? (
+              <div className="grid gap-1.5">
+                <Label htmlFor="cv">CV (PDF, DOC, DOCX — max 10 MB)</Label>
+                <Input id="cv" type="file" accept=".pdf,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+              </div>
+            ) : null}
             <div className="grid gap-1.5">
               <Label htmlFor="cover">Cover letter</Label>
-              <Textarea id="cover" rows={4} value={form.cover_letter} onChange={(e) => setForm({ ...form, cover_letter: e.target.value })} />
+              <Textarea
+                id="cover"
+                rows={4}
+                maxLength={3000}
+                value={form.cover_letter}
+                onChange={(e) => setForm({ ...form, cover_letter: e.target.value })}
+                placeholder="Tell the employer why you are a good fit"
+              />
+              <p className="text-xs text-muted-foreground">{form.cover_letter.length}/3000</p>
             </div>
-            {!user ? (
-              <p className="text-sm text-muted-foreground">
-                You need an account to apply.{" "}
-                <Link to="/auth" search={{ mode: "login" }} className="font-medium text-primary">
-                  Sign in
-                </Link>
-              </p>
-            ) : null}
             <Button type="submit" disabled={apply.isPending}>
               {apply.isPending ? "Submitting…" : "Submit Application"}
             </Button>
@@ -282,3 +373,4 @@ function ApplyDialog({ jobId, jobTitle }: { jobId: string; jobTitle: string }) {
     </Dialog>
   );
 }
+
