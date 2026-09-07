@@ -12,6 +12,13 @@ export type Company = {
   is_demo: boolean;
   is_active: boolean;
   owner_id: string | null;
+  cr_number: string | null;
+  phone: string | null;
+  address: string | null;
+  representative_name: string | null;
+  verification_status: "pending" | "verified" | "rejected" | "suspended";
+  verification_notes: string | null;
+  verified_at: string | null;
   created_at: string;
 };
 
@@ -45,7 +52,7 @@ export type Job = {
   is_featured: boolean;
   is_demo: boolean;
   created_at: string;
-  companies?: Pick<Company, "id" | "name" | "industry" | "location" | "is_demo"> | null;
+  companies?: Pick<Company, "id" | "name" | "industry" | "location" | "is_demo" | "verification_status"> | null;
   categories?: Pick<Category, "id" | "name" | "slug"> | null;
 };
 
@@ -64,7 +71,7 @@ export type Application = {
 };
 
 const JOB_SELECT =
-  "*, companies:company_id(id,name,industry,location,is_demo), categories:category_id(id,name,slug)";
+  "*, companies:company_id(id,name,industry,location,is_demo,verification_status), categories:category_id(id,name,slug)";
 
 export type JobFilters = {
   keyword?: string | undefined;
@@ -155,6 +162,7 @@ export async function fetchCompanies() {
     .from("companies")
     .select("*")
     .eq("is_active", true)
+    .eq("verification_status", "verified")
     .order("name");
   if (error) throw error;
   return (data ?? []) as Company[];

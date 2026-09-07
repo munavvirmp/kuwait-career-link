@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { formatSalary, timeAgo } from "@/lib/constants";
 import type { Job } from "@/lib/api";
 import { SaveJobButton } from "./SaveJobButton";
+import { VerifiedBadge } from "@/components/site/VerifiedBadge";
 
 export function JobCard({ job }: { job: Job }) {
   return (
@@ -26,6 +27,7 @@ export function JobCard({ job }: { job: Job }) {
           <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
             <Building2 className="size-4 shrink-0" />
             <span className="truncate">{job.companies?.name ?? "Company"}</span>
+            {job.companies?.verification_status === "verified" ? <VerifiedBadge /> : null}
           </p>
         </div>
         <SaveJobButton jobId={job.id} />
