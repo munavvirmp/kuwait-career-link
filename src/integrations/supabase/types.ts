@@ -90,7 +90,9 @@ export type Database = {
       }
       companies: {
         Row: {
+          address: string | null
           contact_email: string | null
+          cr_number: string | null
           created_at: string
           description: string | null
           id: string
@@ -100,12 +102,20 @@ export type Database = {
           location: string | null
           name: string
           owner_id: string | null
+          phone: string | null
+          representative_name: string | null
           size: string | null
+          submitted_for_review_at: string | null
           updated_at: string
+          verification_notes: string | null
+          verification_status: Database["public"]["Enums"]["verification_status"]
+          verified_at: string | null
           website: string | null
         }
         Insert: {
+          address?: string | null
           contact_email?: string | null
+          cr_number?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -115,12 +125,20 @@ export type Database = {
           location?: string | null
           name: string
           owner_id?: string | null
+          phone?: string | null
+          representative_name?: string | null
           size?: string | null
+          submitted_for_review_at?: string | null
           updated_at?: string
+          verification_notes?: string | null
+          verification_status?: Database["public"]["Enums"]["verification_status"]
+          verified_at?: string | null
           website?: string | null
         }
         Update: {
+          address?: string | null
           contact_email?: string | null
+          cr_number?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -130,11 +148,105 @@ export type Database = {
           location?: string | null
           name?: string
           owner_id?: string | null
+          phone?: string | null
+          representative_name?: string | null
           size?: string | null
+          submitted_for_review_at?: string | null
           updated_at?: string
+          verification_notes?: string | null
+          verification_status?: Database["public"]["Enums"]["verification_status"]
+          verified_at?: string | null
           website?: string | null
         }
         Relationships: []
+      }
+      company_documents: {
+        Row: {
+          company_id: string
+          created_at: string
+          doc_type: string
+          file_name: string
+          file_path: string
+          id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          doc_type?: string
+          file_name: string
+          file_path: string
+          id?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          doc_type?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_reports: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          details: string | null
+          id: string
+          job_id: string
+          reason: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          job_id: string
+          reason: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          job_id?: string
+          reason?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_reports_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       jobs: {
         Row: {
@@ -333,6 +445,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "employer" | "job_seeker"
+      verification_status: "pending" | "verified" | "rejected" | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -461,6 +574,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "employer", "job_seeker"],
+      verification_status: ["pending", "verified", "rejected", "suspended"],
     },
   },
 } as const
