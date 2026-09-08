@@ -1,7 +1,37 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Search, MapPin, LayoutGrid, ArrowRight, Building2 } from "lucide-react";
+import {
+  Search,
+  MapPin,
+  LayoutGrid,
+  ArrowRight,
+  Building2,
+  Briefcase,
+  Calculator,
+  Laptop,
+  Truck,
+  UtensilsCrossed,
+  TrendingUp,
+  HardHat,
+  Stethoscope,
+  Car,
+  Fuel,
+  type LucideIcon,
+} from "lucide-react";
+
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  "office-administration": Briefcase,
+  "accounting-finance": Calculator,
+  "it-technology": Laptop,
+  "warehouse-logistics": Truck,
+  hospitality: UtensilsCrossed,
+  sales: TrendingUp,
+  engineering: HardHat,
+  healthcare: Stethoscope,
+  driver: Car,
+  "oil-gas": Fuel,
+};
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -100,16 +130,21 @@ function Home() {
       </section>
 
 
-      <Section title="Popular categories" href="/jobs" linkLabel="All jobs">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {(categories.data ?? []).map((c) => (
-            <Link key={c.id} to="/jobs" search={{ category: c.id }}>
-              <Card className="h-full gap-1 p-5 shadow-card transition-shadow hover:shadow-elevated">
-                <LayoutGrid className="size-5 text-primary" />
-                <p className="text-sm font-semibold">{c.name}</p>
-              </Card>
-            </Link>
-          ))}
+      <Section title="Popular job categories" href="/jobs" linkLabel="All jobs">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {(categories.data ?? []).map((c) => {
+            const Icon = CATEGORY_ICONS[c.slug] ?? LayoutGrid;
+            return (
+              <Link key={c.id} to="/jobs" search={{ category: c.id }} className="group">
+                <Card className="h-full items-start gap-2 p-4 shadow-card transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-primary/30 group-hover:shadow-elevated sm:p-5">
+                  <span className="grid size-10 place-items-center rounded-xl bg-accent text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                    <Icon className="size-5" />
+                  </span>
+                  <p className="text-sm font-semibold leading-snug">{c.name}</p>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       </Section>
 
