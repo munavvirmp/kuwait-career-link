@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Building2, ArrowRight, Search } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,9 +27,12 @@ function CompaniesPage() {
   const companies = useQuery({ queryKey: ["companies"], queryFn: fetchCompanies });
   const counts = useQuery({ queryKey: ["company-job-counts"], queryFn: fetchCompanyJobCounts });
 
-  const filteredCompanies = (companies.data ?? []).filter((company) =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // useMemo ഉപയോഗിച്ച് ഫിൽട്ടറിംഗ് ഒപ്റ്റിമൈസ് ചെയ്യുന്നു
+  const filteredCompanies = useMemo(() => {
+    return (companies.data ?? []).filter((company) =>
+      company.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [companies.data, searchTerm]);
 
   return (
     <SiteLayout>
