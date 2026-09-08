@@ -29,9 +29,7 @@ const AuthContext = createContext<AuthContextValue>({
 function getRole(user: User | null): AppRole | null {
   if (!user) return null;
 
-  const metadata = user.user_metadata ?? {};
-
-  const role = metadata.role;
+  const role = user.user_metadata?.role;
 
   if (role === "admin" || role === "employer" || role === "job_seeker") {
     return role;
@@ -56,11 +54,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshRole = async () => {
     try {
-      const {
-        data: { session: currentSession },
-      } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
 
-      updateAuthState(currentSession);
+      if (error) {
+        console.error("Failed to refresh auth state:", error);
+        return;
+      }
+
+      updateAuthState(data.session);
     } catch (error) {
       console.error("Failed to refresh auth state:", error);
     }
@@ -71,13 +72,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initializeAuth = async () => {
       try {
-        const {
-          data: { session: currentSession },
-        } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
 
         if (!mounted) return;
 
-        updateAuthState(currentSession);
+        if (error) {
+          console.error("Supabase auth initialization error:", error);
+          updateAuthState(null);
+          return;
+        }
+
+        updateAuthState(data.session);
       } catch (error) {
         console.error("Failed to initialize authentication:", error);
 
@@ -93,18 +98,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void initializeAuth();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (!mounted) return;
+    let subscription: { unsubscribe: () => void } | null = null;
 
-      updateAuthState(nextSession);
-      setLoading(false);
-    });
+    try {
+      const result = supabase.auth.onAuthStateChange((_event, nextSession) => {
+        if (!mounted) return;
+
+        updateAuthState(nextSession);
+        setLoading(false);
+      });
+
+      subscription = result.data.subscription;
+    } catch (error) {
+      console.error("Failed to subscribe to auth state:", error);
+    }
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
 
