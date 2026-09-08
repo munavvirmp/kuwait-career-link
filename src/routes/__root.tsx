@@ -129,3 +129,4 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+import { TooltipProvider } from "@/components/ui/tooltip";
