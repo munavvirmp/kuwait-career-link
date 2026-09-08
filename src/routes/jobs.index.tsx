@@ -57,10 +57,10 @@ export const Route = createFileRoute("/jobs/")({
   }),
   head: () => ({
     meta: [
-      { title: "Browse Jobs in Kuwait — KuwaitJobs" },
-      { name: "description", content: "Search and filter vacancies across Kuwait by location, salary, category, experience and job type." },
-      { property: "og:title", content: "Browse Jobs in Kuwait" },
-      { property: "og:description", content: "Filter Kuwait vacancies by location, salary, category and experience." },
+      { title: "Browse & Apply for Latest Jobs in Kuwait — Kuwait Career Link" },
+      { name: "description", content: "Search live vacancies across Kuwait City, Hawally, Farwaniya, Ahmadi and Salmiya. Filter by salary, experience, category and job type." },
+      { property: "og:title", content: "Browse Jobs in Kuwait — Kuwait Career Link" },
+      { property: "og:description", content: "Filter thousands of Kuwait job vacancies by location, category, and salary range. Apply online instantly." },
     ],
   }),
   component: JobsPage,
