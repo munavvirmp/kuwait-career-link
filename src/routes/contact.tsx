@@ -28,7 +28,7 @@ function ContactPage() {
         <Card className="gap-2 p-5 shadow-card">
           <Phone className="size-5 text-primary" />
           <p className="text-sm font-semibold">Phone</p>
-          <p className="text-sm text-muted-foreground">+965 0000 0000</p>
+          <p className="text-sm text-muted-foreground">+965 6904 2944</p>
         </Card>
         <Card className="gap-2 p-5 shadow-card">
           <MapPin className="size-5 text-primary" />
@@ -36,10 +36,6 @@ function ContactPage() {
           <p className="text-sm text-muted-foreground">Kuwait City, Kuwait</p>
         </Card>
       </div>
-      <p className="mx-auto max-w-3xl px-4 pb-10 text-sm text-muted-foreground">
-        These contact details are placeholders for this demonstration project. Share your real email,
-        phone number and address and we will put them here.
-      </p>
     </SiteLayout>
   );
 }
