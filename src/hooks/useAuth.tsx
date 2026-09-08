@@ -31,24 +31,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
-      const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-      if (error) {
-        console.error("Error loading user role:", error);
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .maybeSingle(); // Prevents multi-row crash errors
+
+      if (error || !data) {
         setRole(null);
         return;
       }
-      const roles = (data ?? []).map((r) => r.role as AppRole);
-      setRole(
-        roles.includes("admin")
-          ? "admin"
-          : roles.includes("employer")
-            ? "employer"
-            : roles.includes("job_seeker")
-              ? "job_seeker"
-              : null,
-      );
+      
+      const userRole = data.role as AppRole;
+      if (["admin", "employer", "job_seeker"].includes(userRole)) {
+        setRole(userRole);
+      } else {
+        setRole(null);
+      }
     } catch (err) {
-      console.error("Unexpected error loading role:", err);
       setRole(null);
     }
   };
@@ -56,27 +56,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
 
-    const initializeAuth = async () => {
+    const init = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        
+        const { data } = await supabase.auth.getSession();
         if (!active) return;
-        setSession(data.session);
+        setSession(data.session ?? null);
         await loadRole(data.session?.user?.id);
       } catch (err) {
-        console.error("Error getting session:", err);
+        // Fallback safely
       } finally {
         if (active) setLoading(false);
       }
     };
 
-    void initializeAuth();
+    void init();
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_, nextSession) => {
       if (!active) return;
       setSession(nextSession);
-      // Optional chaining used safely here
       void loadRole(nextSession?.user?.id);
     });
 
