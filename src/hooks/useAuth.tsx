@@ -51,14 +51,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const userRole = data.role as AppRole;
+      const value = data.role;
 
       if (
-        userRole === "admin" ||
-        userRole === "employer" ||
-        userRole === "job_seeker"
+        value === "admin" ||
+        value === "employer" ||
+        value === "job_seeker"
       ) {
-        setRole(userRole);
+        setRole(value);
       } else {
         setRole(null);
       }
@@ -68,21 +68,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    let active = true;
+    let mounted = true;
 
-    const initializeAuth = async () => {
+    const initialize = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        const { data } = await supabase.auth.getSession();
 
-        if (!active) return;
-
-        if (error) {
-          setSession(null);
-          setRole(null);
-          return;
-        }
+        if (!mounted) return;
 
         const currentSession = data.session ?? null;
+
         setSession(currentSession);
 
         if (currentSession?.user?.id) {
@@ -91,37 +86,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRole(null);
         }
       } catch {
-        if (!active) return;
+        if (!mounted) return;
 
         setSession(null);
         setRole(null);
       } finally {
-        if (active) {
+        if (mounted) {
           setLoading(false);
         }
       }
     };
 
-    void initializeAuth();
+    void initialize();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_, nextSession) => {
-      if (!active) return;
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (!mounted) return;
 
       setSession(nextSession);
 
-      // Do not await Supabase calls directly inside
-      // the auth state change callback.
-      setTimeout(() => {
-        if (!active) return;
+      if (event === "SIGNED_OUT") {
+        setRole(null);
+        return;
+      }
 
+      setTimeout(() => {
+        if (!mounted) return;
         void loadRole(nextSession?.user?.id);
       }, 0);
     });
 
     return () => {
-      active = false;
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [loadRole]);
@@ -130,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await loadRole(session?.user?.id);
   }, [loadRole, session?.user?.id]);
 
-  const value = useMemo<AuthContextValue>(
+  const value = useMemo(
     () => ({
       session,
       user: session?.user ?? null,
