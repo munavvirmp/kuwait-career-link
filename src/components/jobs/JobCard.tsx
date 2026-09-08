@@ -10,9 +10,10 @@ import { VerifiedBadge } from "@/components/site/VerifiedBadge";
 
 export function JobCard({ job }: { job: Job }) {
   return (
-    <Card className="group gap-0 p-5 shadow-card transition-shadow hover:shadow-elevated">
-      <div className="flex items-start justify-between gap-3">
+    <Card className="group gap-0 p-4 shadow-card transition-shadow hover:shadow-elevated sm:p-5">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
+
           <div className="flex flex-wrap items-center gap-2">
             <Link
               to="/jobs/$jobId"
