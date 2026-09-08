@@ -88,15 +88,22 @@ export function Header() {
               <Menu className="size-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-72">
-            <SheetTitle className="px-4 pt-4">Menu</SheetTitle>
+          <SheetContent side="right" className="w-[85vw] max-w-xs">
+            <SheetTitle className="flex items-center gap-2 px-4 pt-4">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Briefcase className="size-4" />
+              </span>
+              Kuwait<span className="-ml-2 text-primary">Jobs</span>
+            </SheetTitle>
             <nav className="mt-4 flex flex-col gap-1 px-2">
               {NAV.map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}
                   onClick={() => setOpen(false)}
-                  className="rounded-md px-3 py-3 text-sm font-medium hover:bg-accent"
+                  className="rounded-lg px-3 py-3 text-base font-medium transition-colors hover:bg-accent"
+                  activeProps={{ className: "bg-accent text-primary" }}
+                  activeOptions={{ exact: item.to === "/" }}
                 >
                   {item.label}
                 </Link>
