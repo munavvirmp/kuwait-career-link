@@ -34,28 +34,28 @@ export function JobCard({ job }: { job: Job }) {
         <SaveJobButton jobId={job.id} />
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <MapPin className="size-4" /> {job.location}
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[13px] text-muted-foreground sm:gap-x-5 sm:text-sm">
+        <span className="flex min-w-0 items-center gap-1.5">
+          <MapPin className="size-4 shrink-0" /> <span className="truncate">{job.location}</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <Wallet className="size-4" /> {formatSalary(job.salary_min, job.salary_max, job.currency)}
+          <Wallet className="size-4 shrink-0" /> {formatSalary(job.salary_min, job.salary_max, job.currency)}
         </span>
         <span className="flex items-center gap-1.5">
-          <BriefcaseBusiness className="size-4" /> {job.job_type}
+          <BriefcaseBusiness className="size-4 shrink-0" /> {job.job_type}
         </span>
         <span className="flex items-center gap-1.5">
-          <GraduationCap className="size-4" /> {job.experience_years ?? job.experience_level}
+          <GraduationCap className="size-4 shrink-0" /> {job.experience_years ?? job.experience_level}
         </span>
       </div>
 
-      <div className="mt-5 flex items-center justify-between gap-3 border-t border-border pt-4">
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-4 sm:mt-5">
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Clock className="size-3.5" /> {timeAgo(job.created_at)}
+          <Clock className="size-3.5 shrink-0" /> {timeAgo(job.created_at)}
         </span>
         <Button asChild size="sm">
           <Link to="/jobs/$jobId" params={{ jobId: job.id }}>
-            Apply
+            View & Apply
           </Link>
         </Button>
       </div>
