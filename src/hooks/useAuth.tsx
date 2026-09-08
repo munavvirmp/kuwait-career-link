@@ -1,12 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -33,12 +25,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadRole = useCallback(async (userId?: string) => {
-    if (!userId) {
+  const loadRole = async (userId: string | undefined) => {
+    if (!userId || !supabase) {
       setRole(null);
       return;
     }
-
     try {
       const { data, error } = await supabase
         .from("user_roles")
@@ -50,99 +41,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRole(null);
         return;
       }
-
-      const value = data.role;
-
-      if (
-        value === "admin" ||
-        value === "employer" ||
-        value === "job_seeker"
-      ) {
-        setRole(value);
+      
+      const userRole = data.role as AppRole;
+      if (["admin", "employer", "job_seeker"].includes(userRole)) {
+        setRole(userRole);
       } else {
         setRole(null);
       }
-    } catch {
+    } catch (err) {
       setRole(null);
     }
-  }, []);
+  };
 
   useEffect(() => {
-    let mounted = true;
+    let active = true;
 
-    const initialize = async () => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
+    const init = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
-
-        if (!mounted) return;
-
-        const currentSession = data.session ?? null;
-
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (!active) return;
+        
+        const currentSession = data?.session ?? null;
         setSession(currentSession);
-
-        if (currentSession?.user?.id) {
-          await loadRole(currentSession.user.id);
-        } else {
+        await loadRole(currentSession?.user?.id);
+      } catch (err) {
+        if (active) {
+          setSession(null);
           setRole(null);
         }
-      } catch {
-        if (!mounted) return;
-
-        setSession(null);
-        setRole(null);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        if (active) setLoading(false);
       }
     };
 
-    void initialize();
+    void init();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, nextSession) => {
-      if (!mounted) return;
-
-      setSession(nextSession);
-
-      if (event === "SIGNED_OUT") {
-        setRole(null);
-        return;
-      }
-
-      setTimeout(() => {
-        if (!mounted) return;
-        void loadRole(nextSession?.user?.id);
-      }, 0);
+    const { data: authListener } = supabase.auth.onAuthStateChange((_, nextSession) => {
+      if (!active) return;
+      setSession(nextSession ?? null);
+      void loadRole(nextSession?.user?.id);
     });
 
     return () => {
-      mounted = false;
-      subscription.unsubscribe();
+      active = false;
+      authListener?.subscription?.unsubscribe();
     };
-  }, [loadRole]);
+  }, []);
 
-  const refreshRole = useCallback(async () => {
-    await loadRole(session?.user?.id);
-  }, [loadRole, session?.user?.id]);
-
-  const value = useMemo(
+  const value = useMemo<AuthContextValue>(
     () => ({
       session,
       user: session?.user ?? null,
       role,
       loading,
-      refreshRole,
+      refreshRole: () => loadRole(session?.user?.id),
     }),
-    [session, role, loading, refreshRole],
+    [session, role, loading],
   );
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
