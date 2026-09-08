@@ -1,5 +1,12 @@
-import { createContext, useContext, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import type { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
 export type AppRole = "admin" | "employer" | "job_seeker";
 
@@ -15,20 +22,100 @@ const AuthContext = createContext<AuthContextValue>({
   session: null,
   user: null,
   role: null,
-  loading: false,
+  loading: true,
   refreshRole: async () => {},
 });
 
+function getRole(user: User | null): AppRole | null {
+  if (!user) return null;
+
+  const metadata = user.user_metadata ?? {};
+
+  const role = metadata.role;
+
+  if (role === "admin" || role === "employer" || role === "job_seeker") {
+    return role;
+  }
+
+  return "job_seeker";
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // താൽക്കാലികമായി ലോഗിൻ ഓഫ് ചെയ്തു വെക്കുന്നു (Mock Auth)
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [role, setRole] = useState<AppRole | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const updateAuthState = (nextSession: Session | null) => {
+    const nextUser = nextSession?.user ?? null;
+
+    setSession(nextSession);
+    setUser(nextUser);
+    setRole(getRole(nextUser));
+  };
+
+  const refreshRole = async () => {
+    try {
+      const {
+        data: { session: currentSession },
+      } = await supabase.auth.getSession();
+
+      updateAuthState(currentSession);
+    } catch (error) {
+      console.error("Failed to refresh auth state:", error);
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        updateAuthState(currentSession);
+      } catch (error) {
+        console.error("Failed to initialize authentication:", error);
+
+        if (mounted) {
+          updateAuthState(null);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void initializeAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!mounted) return;
+
+      updateAuthState(nextSession);
+      setLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
-        session: null,
-        user: null,
-        role: null,
-        loading: false,
-        refreshRole: async () => {},
+        session,
+        user,
+        role,
+        loading,
+        refreshRole,
       }}
     >
       {children}
