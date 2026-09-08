@@ -52,8 +52,8 @@ export type Job = {
   is_featured: boolean;
   is_demo: boolean;
   created_at: string;
-  companies?: Pick<Company, "id" | "name" | "industry" | "location" | "is_demo" | "verification_status"> | null;
-  categories?: Pick<Category, "id" | "name" | "slug"> | null;
+  companies?: Pick<Company, "id" "industry" "is_demo" "location" "name" "verification_status" |> | null;
+  categories?: Pick<Category, "id" "name" "slug" |> | null;
 };
 
 export type Application = {
@@ -175,322 +175,285 @@ export async function fetchCompanyJobCounts() {
   for (const row of data ?? []) counts[row.company_id] = (counts[row.company_id] ?? 0) + 1;
   return counts;
 }
+
 export type ApplicationStatus =
-| “Applied”
-| “Shortlisted”
-| “Interview”
-| “Selected”
-| “Rejected”;
+  | "Applied"
+  | "Shortlisted"
+  | "Interview"
+  | "Selected"
+  | "Rejected";
 
 export type SubmitApplicationInput = {
-jobId: string;
-fullName: string;
-email: string;
-phone?: string | null;
-coverLetter?: string | null;
-cvFile?: File | null;
+  jobId: string;
+  fullName: string;
+  email: string;
+  phone?: string | null;
+  coverLetter?: string | null;
+  cvFile?: File | null;
 };
 
 const ALLOWED_CV_TYPES = [
-“application/pdf”,
-“application/msword”,
-“application/vnd.openxmlformats-officedocument.wordprocessingml.document”,
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
-const ALLOWED_CV_EXTENSIONS = [“pdf”, “doc”, “docx”];
+const ALLOWED_CV_EXTENSIONS = ["pdf", "doc", "docx"];
 const MAX_CV_SIZE = 10 * 1024 * 1024;
 
 export async function submitApplication(
-input: SubmitApplicationInput,
-): Promise {
-const {
-data: { user },
-error: authError,
-} = await supabase.auth.getUser();
+  input: SubmitApplicationInput,
+): Promise<Application> {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
-if (authError) {
-throw new Error(“Unable to verify your login session.”);
-}
+  if (authError || !user) {
+    throw new Error("Please log in before applying for a job.");
+  }
 
-if (!user) {
-throw new Error(“Please log in before applying for a job.”);
-}
+  if (!input.jobId) {
+    throw new Error("Invalid job.");
+  }
 
-if (!input.jobId) {
-throw new Error(“Invalid job.”);
-}
+  if (!input.fullName.trim()) {
+    throw new Error("Please enter your full name.");
+  }
 
-if (!input.fullName.trim()) {
-throw new Error(“Please enter your full name.”);
-}
+  if (!input.email.trim()) {
+    throw new Error("Please enter your email address.");
+  }
 
-if (!input.email.trim()) {
-throw new Error(“Please enter your email address.”);
-}
+  if (!input.cvFile) {
+    throw new Error("Please upload your CV.");
+  }
 
-if (!input.cvFile) {
-throw new Error(“Please upload your CV.”);
-}
+  const file = input.cvFile;
+  const extension = file.name.split(".").pop()?.toLowerCase();
 
-const file = input.cvFile;
-const extension = file.name.split(”.”).pop()?.toLowerCase();
+  if (!extension || !ALLOWED_CV_EXTENSIONS.includes(extension)) {
+    throw new Error("CV must be a PDF, DOC or DOCX file.");
+  }
 
-if (!extension || !ALLOWED_CV_EXTENSIONS.includes(extension)) {
-throw new Error(“CV must be a PDF, DOC or DOCX file.”);
-}
+  if (file.type && !ALLOWED_CV_TYPES.includes(file.type)) {
+    throw new Error("Invalid CV file type.");
+  }
 
-if (file.type && !ALLOWED_CV_TYPES.includes(file.type)) {
-throw new Error(“Invalid CV file type.”);
-}
+  if (file.size > MAX_CV_SIZE) {
+    throw new Error("CV file must be smaller than 10 MB.");
+  }
 
-if (file.size > MAX_CV_SIZE) {
-throw new Error(“CV file must be smaller than 10 MB.”);
-}
-
-/*
-
-* Make sure the job exists and is publicly available.
-    */
-    const { data: job, error: jobError } = await supabase
-    .from(“jobs”)
-    .select(“id,status”)
-    .eq(“id”, input.jobId)
+  /* Make sure the job exists and is publicly available. */
+  const { data: job, error: jobError } = await supabase
+    .from("jobs")
+    .select("id,status")
+    .eq("id", input.jobId)
     .maybeSingle();
 
-if (jobError) {
-throw new Error(“Unable to verify this job.”);
-}
+  if (jobError) {
+    throw new Error("Unable to verify this job.");
+  }
 
-if (!job) {
-throw new Error(“This job no longer exists.”);
-}
+  if (!job) {
+    throw new Error("This job no longer exists.");
+  }
 
-if (job.status !== “approved”) {
-throw new Error(“This job is no longer accepting applications.”);
-}
+  if (job.status !== "approved") {
+    throw new Error("This job is no longer accepting applications.");
+  }
 
-/*
-
-* Prevent duplicate applications.
-    */
-    const { data: existingApplication, error: duplicateError } =
-    await supabase
-    .from(“applications”)
-    .select(“id”)
-    .eq(“job_id”, input.jobId)
-    .eq(“applicant_id”, user.id)
+  /* Prevent duplicate applications. */
+  const { data: existingApplication, error: duplicateError } = await supabase
+    .from("applications")
+    .select("id")
+    .eq("job_id", input.jobId)
+    .eq("applicant_id", user.id)
     .maybeSingle();
 
-if (duplicateError) {
-throw new Error(“Unable to check your previous application.”);
-}
+  if (duplicateError) {
+    throw new Error("Unable to check your previous application.");
+  }
 
-if (existingApplication) {
-throw new Error(“You have already applied for this job.”);
-}
+  if (existingApplication) {
+    throw new Error("You have already applied for this job.");
+  }
 
-/*
-
-* Create the application first so the CV can use the
-* application ID in its storage path.
-    /
-    const { data: application, error: applicationError } = await supabase
-    .from(“applications”)
+  /* Create application entry first */
+  const { data: application, error: applicationError } = await supabase
+    .from("applications")
     .insert({
-    job_id: input.jobId,
-    applicant_id: user.id,
-    full_name: input.fullName.trim(),
-    email: input.email.trim(),
-    phone: input.phone?.trim() || null,
-    cover_letter: input.coverLetter?.trim() || null,
-    status: “Applied”,
-    cv_url: null,
+      job_id: input.jobId,
+      applicant_id: user.id,
+      full_name: input.fullName.trim(),
+      email: input.email.trim(),
+      phone: input.phone?.trim() || null,
+      cover_letter: input.coverLetter?.trim() || null,
+      status: "Applied",
+      cv_url: null,
     })
-    .select(””)
+    .select("*")
     .single();
 
-if (applicationError || !application) {
-if (applicationError?.code === “23505”) {
-throw new Error(“You have already applied for this job.”);
-}
+  if (applicationError || !application) {
+    if (applicationError?.code === "23505") {
+      throw new Error("You have already applied for this job.");
+    }
+    throw new Error(
+      applicationError?.message || "Unable to submit your application.",
+    );
+  }
 
-throw new Error(
-  applicationError?.message ||
-    "Unable to submit your application.",
-);
+  /* Upload CV using a private path */
+  const cvPath = `${user.id}/${application.id}/cv-${Date.now()}.${extension}`;
 
-}
+  const { error: uploadError } = await supabase.storage
+    .from("cvs")
+    .upload(cvPath, file, {
+      upsert: false,
+      contentType: file.type || undefined,
+    });
 
-/*
-
-* Upload CV using a private user/application-specific path.
-    */
-    const cvPath = ${user.id}/${application.id}/cv-${Date.now()}.${extension};
-
-const { error: uploadError } = await supabase.storage
-.from(“cvs”)
-.upload(cvPath, file, {
-upsert: false,
-contentType: file.type || undefined,
-});
-
-if (uploadError) {
-/*
-* Remove the application if CV upload fails so we do not
-* leave an incomplete application in the database.
-*/
-await supabase
-.from(“applications”)
-.delete()
-.eq(“id”, application.id)
-.eq(“applicant_id”, user.id);
-
-throw new Error(
-  "CV upload failed. Your application was not submitted.",
-);
-
-}
-
-/*
-
-* Save the private storage path in the application.
-    /
-    const { data: updatedApplication, error: updateError } =
+  if (uploadError) {
     await supabase
-    .from(“applications”)
-    .update({
-    cv_url: cvPath,
-    })
-    .eq(“id”, application.id)
-    .eq(“applicant_id”, user.id)
-    .select(””)
+      .from("applications")
+      .delete()
+      .eq("id", application.id)
+      .eq("applicant_id", user.id);
+
+    throw new Error("CV upload failed. Your application was not submitted.");
+  }
+
+  /* Update DB with final CV storage path */
+  const { data: updatedApplication, error: updateError } = await supabase
+    .from("applications")
+    .update({ cv_url: cvPath })
+    .eq("id", application.id)
+    .eq("applicant_id", user.id)
+    .select("*")
     .single();
 
-if (updateError || !updatedApplication) {
-await supabase.storage.from(“cvs”).remove([cvPath]);
+  if (updateError || !updatedApplication) {
+    await supabase.storage.from("cvs").remove([cvPath]);
+    await supabase
+      .from("applications")
+      .delete()
+      .eq("id", application.id)
+      .eq("applicant_id", user.id);
 
-await supabase
-  .from("applications")
-  .delete()
-  .eq("id", application.id)
-  .eq("applicant_id", user.id);
-throw new Error(
-  updateError?.message ||
-    "Unable to complete your application.",
-);
+    throw new Error(
+      updateError?.message || "Unable to complete your application.",
+    );
+  }
 
-}
-
-return updatedApplication as Application;
+  return updatedApplication as Application;
 }
 
 export async function fetchMyApplications(): Promise<Application[]> {
-const {
-data: { user },
-} = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-if (!user) {
-throw new Error(“Please log in.”);
-}
+  if (!user) {
+    throw new Error("Please log in.");
+  }
 
-const { data, error } = await supabase
-.from(“applications”)
-.select(*, jobs:job_id(${JOB_SELECT}))
-.eq(“applicant_id”, user.id)
-.order(“created_at”, { ascending: false });
+  const { data, error } = await supabase
+    .from("applications")
+    .select(`*, jobs:job_id(${JOB_SELECT})`)
+    .eq("applicant_id", user.id)
+    .order("created_at", { ascending: false });
 
-if (error) throw error;
+  if (error) throw error;
 
-return (data ?? []) as unknown as Application[];
+  return (data ?? []) as unknown as Application[];
 }
 
 export async function checkExistingApplication(
-jobId: string,
-): Promise {
-const {
-data: { user },
-} = await supabase.auth.getUser();
+  jobId: string,
+): Promise<boolean> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-if (!user) return false;
+  if (!user) return false;
 
-const { data, error } = await supabase
-.from(“applications”)
-.select(“id”)
-.eq(“job_id”, jobId)
-.eq(“applicant_id”, user.id)
-.maybeSingle();
+  const { data, error } = await supabase
+    .from("applications")
+    .select("id")
+    .eq("job_id", jobId)
+    .eq("applicant_id", user.id)
+    .maybeSingle();
 
-if (error) throw error;
+  if (error) throw error;
 
-return Boolean(data);
+  return Boolean(data);
 }
 
 export async function fetchEmployerApplications(
-companyId: string,
+  companyId: string,
 ): Promise<Application[]> {
-if (!companyId) {
-throw new Error(“Invalid company.”);
-}
+  if (!companyId) {
+    throw new Error("Invalid company.");
+  }
 
-const { data, error } = await supabase
-.from(“applications”)
-.select(*, jobs:job_id(${JOB_SELECT}))
-.eq(“jobs.company_id”, companyId)
-.order(“created_at”, { ascending: false });
+  const { data, error } = await supabase
+    .from("applications")
+    .select(`*, jobs:job_id(${JOB_SELECT})`)
+    .eq("jobs.company_id", companyId)
+    .order("created_at", { ascending: false });
 
-if (error) throw error;
+  if (error) throw error;
 
-return (data ?? []) as unknown as Application[];
+  return (data ?? []) as unknown as Application[];
 }
 
 export async function updateApplicationStatus(
-applicationId: string,
-status: ApplicationStatus,
+  applicationId: string,
+  status: ApplicationStatus,
 ) {
-const validStatuses: ApplicationStatus[] = [
-“Applied”,
-“Shortlisted”,
-“Interview”,
-“Selected”,
-“Rejected”,
-];
+  const validStatuses: ApplicationStatus[] = [
+    "Applied",
+    "Shortlisted",
+    "Interview",
+    "Selected",
+    "Rejected",
+  ];
 
-if (!validStatuses.includes(status)) {
-throw new Error(“Invalid application status.”);
-}
+  if (!validStatuses.includes(status)) {
+    throw new Error("Invalid application status.");
+  }
 
-if (!applicationId) {
-throw new Error(“Invalid application.”);
-}
+  if (!applicationId) {
+    throw new Error("Invalid application.");
+  }
 
-const { data, error } = await supabase
-.from(“applications”)
-.update({
-status,
-})
-.eq(“id”, applicationId)
-.select(”*”)
-.single();
+  const { data, error } = await supabase
+    .from("applications")
+    .update({ status })
+    .eq("id", applicationId)
+    .select("*")
+    .single();
 
-if (error) throw error;
+  if (error) throw error;
 
-return data as Application;
+  return data as Application;
 }
 
 export async function getApplicationCvUrl(
-cvPath: string,
-): Promise {
-if (!cvPath) {
-throw new Error(“CV is not available.”);
-}
+  cvPath: string,
+): Promise<string> {
+  if (!cvPath) {
+    throw new Error("CV is not available.");
+  }
 
-const { data, error } = await supabase.storage
-.from(“cvs”)
-.createSignedUrl(cvPath, 60 * 5);
+  const { data, error } = await supabase.storage
+    .from("cvs")
+    .createSignedUrl(cvPath, 60 * 5); // Signed URL valid for 5 minutes
 
-if (error || !data?.signedUrl) {
-throw new Error(“Unable to open CV.”);
-}
+  if (error || !data?.signedUrl) {
+    throw new Error("Unable to open CV.");
+  }
 
-return data.signedUrl;
+  return data.signedUrl;
 }
