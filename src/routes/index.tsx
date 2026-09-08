@@ -52,37 +52,53 @@ function Home() {
 
   return (
     <SiteLayout>
-      <section className="border-b border-border bg-hero">
-        <div className="mx-auto max-w-6xl px-4 py-16 text-center sm:py-24">
+      <section className="relative overflow-hidden border-b border-border bg-hero-gradient">
+        <div className="mx-auto max-w-6xl px-4 py-14 text-center sm:py-24">
           <Badge variant="secondary" className="mb-4">Sample demo listings only</Badge>
-          <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">Find Your Next Job in Kuwait</h1>
-          <p className="mx-auto mt-4 max-w-2xl text-muted-foreground sm:text-lg">
+          <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-primary-foreground sm:text-5xl">
+            Find Your Next Job in Kuwait
+          </h1>
+          <p className="mx-auto mt-3 max-w-2xl text-sm text-primary-foreground/80 sm:mt-4 sm:text-lg">
             Thousands of roles across Kuwait City, Hawally, Farwaniya, Shuwaikh, Ahmadi, Salmiya and Jahra.
           </p>
 
-          <form onSubmit={submit} className="mx-auto mt-8 grid max-w-4xl gap-3 rounded-xl bg-card p-4 shadow-elevated sm:grid-cols-[1fr_1fr_1fr_auto]">
+          <form onSubmit={submit} className="mx-auto mt-7 grid max-w-4xl gap-3 rounded-2xl bg-card p-3 text-left shadow-elevated sm:mt-9 sm:p-4 lg:grid-cols-[1.4fr_1fr_1fr_auto]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input className="pl-9" placeholder="Job title or keyword" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+              <Input className="h-11 pl-9" placeholder="Job title or keyword" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
             </div>
             <Select value={location} onValueChange={setLocation}>
-              <SelectTrigger><MapPin className="size-4" /><SelectValue placeholder="Location" /></SelectTrigger>
+              <SelectTrigger className="h-11 w-full"><MapPin className="size-4" /><SelectValue placeholder="Location" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="any">All locations</SelectItem>
                 {KUWAIT_LOCATIONS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger><LayoutGrid className="size-4" /><SelectValue placeholder="Category" /></SelectTrigger>
+              <SelectTrigger className="h-11 w-full"><LayoutGrid className="size-4" /><SelectValue placeholder="Category" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="any">All categories</SelectItem>
                 {(categories.data ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Button type="submit">Search Jobs</Button>
+            <Button type="submit" size="lg" className="h-11">Search Jobs</Button>
           </form>
+
+          <dl className="mx-auto mt-8 grid max-w-3xl grid-cols-3 gap-3 sm:mt-10 sm:gap-6">
+            {[
+              { label: "Open vacancies", value: `${latest.data ? "500+" : "—"}` },
+              { label: "Hiring companies", value: `${(companies.data ?? []).length || "—"}` },
+              { label: "Job categories", value: `${(categories.data ?? []).length || "—"}` },
+            ].map((s) => (
+              <div key={s.label} className="rounded-xl bg-card/10 px-2 py-3 backdrop-blur sm:px-4">
+                <dt className="text-lg font-bold text-primary-foreground sm:text-2xl">{s.value}</dt>
+                <dd className="text-[11px] text-primary-foreground/75 sm:text-sm">{s.label}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
+
 
       <Section title="Popular categories" href="/jobs" linkLabel="All jobs">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
