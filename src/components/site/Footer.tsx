@@ -71,10 +71,10 @@ export function Footer() {
           <h3 className="text-sm font-semibold">Get in touch</h3>
           <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
             <li className="flex items-center gap-2">
-              <Mail className="size-4" /> support@kuwaitjobs.example
+              <Mail className="size-4" /> mohammedmunavvir758@gmail.com
             </li>
             <li className="flex items-center gap-2">
-              <Phone className="size-4" /> +965 0000 0000
+              <Phone className="size-4" /> +965 6904 2944
             </li>
           </ul>
         </div>
