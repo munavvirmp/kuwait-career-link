@@ -7,7 +7,15 @@ import {
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
-const queryClient = new QueryClient();
+// QueryClient പുറത്ത് നിർവചിക്കുന്നു, ಇದರಿಂದ ഓരോ തവണയും ഇത് വീണ്ടും ക്രിയേറ്റ് ചെയ്യപ്പെടില്ല.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 മിനിറ്റ് വരെ ഡാറ്റ ഫ്രഷ് ആയി നിലനിർത്തുന്നു
+      refetchOnWindowFocus: false, // വിൻഡോ ഫോക്കസ് ചെയ്യുമ്പോൾ ഓട്ടോമാറ്റിക് ഫെച്ച് ചെയ്യുന്നത് ഒഴിവാക്കുന്നു
+    },
+  },
+});
 
 export const Route = createRootRoute({
   head: () => ({
