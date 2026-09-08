@@ -1,9 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, ArrowRight } from "lucide-react";
+import { Building2, ArrowRight, Search } from "lucide-react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
-import { LoadingList, ErrorState } from "@/components/site/States";
+import { LoadingList, ErrorState, EmptyState } from "@/components/site/States";
 import { fetchCompanies, fetchCompanyJobCounts } from "@/lib/api";
 
 export const Route = createFileRoute("/companies/")({
@@ -19,8 +22,14 @@ export const Route = createFileRoute("/companies/")({
 });
 
 function CompaniesPage() {
+  const [searchTerm, setSearchTerm] = useState("");
+  
   const companies = useQuery({ queryKey: ["companies"], queryFn: fetchCompanies });
   const counts = useQuery({ queryKey: ["company-job-counts"], queryFn: fetchCompanyJobCounts });
+
+  const filteredCompanies = (companies.data ?? []).filter((company) =>
+    company.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <SiteLayout>
@@ -30,11 +39,41 @@ function CompaniesPage() {
       />
 
       <div className="mx-auto max-w-6xl px-4 py-8">
+        <div className="mb-6 max-w-md">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search companies..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
+
         {companies.isLoading ? <LoadingList count={4} /> : null}
-        {companies.isError ? <ErrorState /> : null}
+        
+        {companies.isError ? (
+          <ErrorState
+            title="Unable to load companies"
+            description="Please check your connection and try again."
+            action={
+              <Button className="mt-2" onClick={() => void companies.refetch()}>
+                Try Again
+              </Button>
+            }
+          />
+        ) : null}
+
+        {!companies.isLoading && !companies.isError && filteredCompanies.length === 0 ? (
+          <EmptyState
+            title="No companies found"
+            description="Try adjusting your search criteria."
+          />
+        ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {(companies.data ?? []).map((company) => (
+          {filteredCompanies.map((company) => (
             <Link key={company.id} to="/jobs" search={{ keyword: company.name }} className="group">
               <Card className="h-full justify-between gap-4 p-6 shadow-card transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-primary/30 group-hover:shadow-elevated">
                 <div className="flex items-start gap-4">
@@ -45,6 +84,9 @@ function CompaniesPage() {
                     <h2 className="truncate text-base font-semibold group-hover:text-primary">
                       {company.name}
                     </h2>
+                    {company.industry ? (
+                      <p className="text-xs text-muted-foreground">{company.industry}</p>
+                    ) : null}
                     <p className="mt-1 text-xs text-muted-foreground">
                       {counts.data?.[company.id] ?? 0} open positions
                     </p>
