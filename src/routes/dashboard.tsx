@@ -29,7 +29,9 @@ const JOB_SELECT =
 export const Route = createFileRoute(”/dashboard”)({
 head: () => ({
 meta: [
-{ title: “My Dashboard — Kuwait Career Link” },
+{
+title: “My Dashboard — Kuwait Career Link”,
+},
 {
 name: “description”,
 content:
@@ -42,7 +44,7 @@ content: “Job Seeker Dashboard — Kuwait Career Link”,
 {
 property: “og:description”,
 content:
-“Manage your profile, CV, saved jobs and applications in one place.”,
+“Profile, CV, saved jobs and application status in one place.”,
 },
 ],
 }),
@@ -61,48 +63,37 @@ location: “”,
 headline: “”,
 });
 
-/*
+useEffect(() => {
+if (loading) return;
+if (user) return;
 
-* Redirect unauthenticated users.
-    */
-    useEffect(() => {
-    if (loading) return;
-
-if (!user) {
-  void navigate({
-    to: "/auth",
-    search: { mode: "login" },
-    replace: true,
-  });
-}
+void navigate({
+  to: "/auth",
+  search: { mode: "login" },
+  replace: true,
+});
 
 }, [loading, user, navigate]);
 
-/*
+const profile = useQuery({
+queryKey: [“profile”, user?.id],
+enabled: Boolean(user?.id),
+queryFn: async () => {
+if (!user) return null;
 
-* Profile
-    */
-    const profile = useQuery({
-    queryKey: [“profile”, user?.id],
-    enabled: Boolean(user?.id),
-    queryFn: async () => {
-    if (!user) return null;
-    const { data, error } = await supabase
-    .from(“profiles”)
-    .select(”*”)
-    .eq(“id”, user.id)
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
     .maybeSingle();
-    if (error) throw error;
-    return data;
-    },
-    });
+  if (error) throw error;
+  return data;
+},
 
-/*
+});
 
-* Populate profile form.
-    */
-    useEffect(() => {
-    if (!profile.data) return;
+useEffect(() => {
+if (!profile.data) return;
 
 setForm({
   full_name: profile.data.full_name ?? "",
@@ -113,55 +104,48 @@ setForm({
 
 }, [profile.data]);
 
-/*
+const saved = useQuery({
+queryKey: [“saved-jobs”, user?.id],
+enabled: Boolean(user?.id),
+queryFn: async () => {
+if (!user) return [];
 
-* Saved jobs
-    */
-    const saved = useQuery({
-    queryKey: [“saved-jobs”, user?.id],
-    enabled: Boolean(user?.id),
-    queryFn: async () => {
-    if (!user) return [];
-    const { data, error } = await supabase
-    .from(“saved_jobs”)
-    .select(id, jobs:job_id(${JOB_SELECT}))
-    .eq(“user_id”, user.id)
-    .order(“created_at”, { ascending: false });
-    if (error) throw error;
-    return (data ?? [])
+  const { data, error } = await supabase
+    .from("saved_jobs")
+    .select(`id, jobs:job_id(${JOB_SELECT})`)
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? [])
     .map((row) => row.jobs as unknown as Job)
     .filter(Boolean);
-    },
-    });
+},
+
+});
+
+const applications = useQuery({
+queryKey: [“my-applications”, user?.id],
+enabled: Boolean(user?.id),
+queryFn: async () => {
+if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("applications")
+    .select(`*, jobs:job_id(${JOB_SELECT})`)
+    .eq("applicant_id", user.id)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as Application[];
+},
+
+});
 
 /*
 
-* Applications
-    */
-    const applications = useQuery({
-    queryKey: [“my-applications”, user?.id],
-    enabled: Boolean(user?.id),
-    queryFn: async () => {
-    if (!user) return [];
-    const { data, error } = await supabase
-    .from(“applications”)
-    .select(*, jobs:job_id(${JOB_SELECT}))
-    .eq(“applicant_id”, user.id)
-    .order(“created_at”, { ascending: false });
-    if (error) throw error;
-    return (data ?? []) as unknown as Application[];
-    },
-    });
-
-/*
-
-* Recommended / latest jobs
-* IMPORTANT:
-* Do not filter by location here.
-* This prevents jobs from disappearing because of small
-* location-name differences such as:
-* “Farwaniya” vs “Al Farwaniyah”.
-* We also accept the common public statuses.
+* Load public jobs.
+* We intentionally do not filter by profile location.
+* This prevents jobs from disappearing because of different
+* spellings such as “Farwaniya” and “Al Farwaniyah”.
     */
     const recommended = useQuery({
     queryKey: [“recommended-jobs”, user?.id],
@@ -178,27 +162,25 @@ setForm({
     },
     });
 
-/*
+const saveProfile = useMutation({
+mutationFn: async () => {
+if (!user) {
+throw new Error(“You must be signed in.”);
+}
 
-* Update profile
-    */
-    const saveProfile = useMutation({
-    mutationFn: async () => {
-    if (!user) {
-    throw new Error(“You must be signed in.”);
-    }
-    const { error } = await supabase
-    .from(“profiles”)
+  const { error } = await supabase
+    .from("profiles")
     .update({
-    full_name: form.full_name.trim(),
-    phone: form.phone.trim(),
-    location: form.location.trim(),
-    headline: form.headline.trim(),
+      full_name: form.full_name.trim(),
+      phone: form.phone.trim(),
+      location: form.location.trim(),
+      headline: form.headline.trim(),
     })
-    .eq(“id”, user.id);
-    if (error) throw new Error(error.message);
-    },
-
+    .eq("id", user.id);
+  if (error) {
+    throw new Error(error.message);
+  }
+},
 onSuccess: () => {
   toast.success("Profile updated successfully.");
   void queryClient.invalidateQueries({
@@ -211,44 +193,40 @@ onError: (error: Error) => {
 
 });
 
-/*
+const uploadCv = useMutation({
+mutationFn: async (file: File) => {
+if (!user) {
+throw new Error(“You must be signed in.”);
+}
 
-* Upload CV
-    */
-    const uploadCv = useMutation({
-    mutationFn: async (file: File) => {
-    if (!user) {
-    throw new Error(“You must be signed in.”);
-    }
-    const extension = file.name.split(”.”).pop()?.toLowerCase();
-    if (!extension || ![“pdf”, “doc”, “docx”].includes(extension)) {
-    throw new Error(“CV must be a PDF, DOC or DOCX file.”);
-    }
-    if (file.size > 10 * 1024 * 1024) {
-    throw new Error(“CV file must be smaller than 10 MB.”);
-    }
-    const path = ${user.id}/cv-${Date.now()}.${extension};
-    const { error: uploadError } = await supabase.storage
-    .from(“cvs”)
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  if (!extension || !["pdf", "doc", "docx"].includes(extension)) {
+    throw new Error("CV must be a PDF, DOC or DOCX file.");
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    throw new Error("CV file must be smaller than 10 MB.");
+  }
+  const path = `${user.id}/cv-${Date.now()}.${extension}`;
+  const { error: uploadError } = await supabase.storage
+    .from("cvs")
     .upload(path, file, {
-    upsert: true,
-    contentType: file.type || undefined,
+      upsert: true,
+      contentType: file.type || undefined,
     });
-    if (uploadError) {
+  if (uploadError) {
     throw new Error(uploadError.message);
-    }
-    const { error: profileError } = await supabase
-    .from(“profiles”)
+  }
+  const { error: profileError } = await supabase
+    .from("profiles")
     .update({
-    cv_url: path,
-    cv_name: file.name,
+      cv_url: path,
+      cv_name: file.name,
     })
-    .eq(“id”, user.id);
-    if (profileError) {
+    .eq("id", user.id);
+  if (profileError) {
     throw new Error(profileError.message);
-    }
-    },
-
+  }
+},
 onSuccess: () => {
   toast.success("CV uploaded successfully.");
   void queryClient.invalidateQueries({
@@ -261,18 +239,9 @@ onError: (error: Error) => {
 
 });
 
-/*
-
-* Loading / authentication state
-    */
-    if (loading || !user) {
-    return (
-   <div className="mx-auto max-w-4xl px-4 py-10">
-     <LoadingList count={2} />
-   </div>
- </SiteLayout>
+if (loading || !user) {
+return (
 );
-
 }
 
 return (
@@ -283,11 +252,8 @@ return (
         <TabsTrigger value="cv">CV</TabsTrigger>
         <TabsTrigger value="saved">Saved Jobs</TabsTrigger>
         <TabsTrigger value="applied">Applied Jobs</TabsTrigger>
-        <TabsTrigger value="recommended">
-          Latest Jobs
-        </TabsTrigger>
+        <TabsTrigger value="recommended">Latest Jobs</TabsTrigger>
       </TabsList>
-      {/* PROFILE */}
       <TabsContent value="profile" className="mt-6">
         <Card className="max-w-xl gap-4 p-6 shadow-card">
           <div className="grid gap-1.5">
@@ -357,12 +323,9 @@ return (
           </Button>
         </Card>
       </TabsContent>
-      {/* CV */}
       <TabsContent value="cv" className="mt-6">
         <Card className="max-w-xl gap-4 p-6 shadow-card">
-          <h2 className="text-base font-semibold">
-            Upload Your CV
-          </h2>
+          <h2 className="text-base font-semibold">Upload Your CV</h2>
           <p className="text-sm text-muted-foreground">
             {profile.data?.cv_name
               ? `Current file: ${profile.data.cv_name}`
@@ -387,7 +350,6 @@ return (
           </p>
         </Card>
       </TabsContent>
-      {/* SAVED JOBS */}
       <TabsContent value="saved" className="mt-6">
         {saved.isLoading && <LoadingList />}
         {saved.isError && (
@@ -415,7 +377,6 @@ return (
           ))}
         </div>
       </TabsContent>
-      {/* APPLICATIONS */}
       <TabsContent value="applied" className="mt-6">
         {applications.isLoading && <LoadingList />}
         {applications.isError && (
@@ -448,8 +409,8 @@ return (
                   {application.jobs?.title ?? "Job"}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {application.jobs?.companies?.name ?? "Company"} ·
-                  applied {timeAgo(application.created_at)}
+                  {application.jobs?.companies?.name ?? "Company"} · applied{" "}
+                  {timeAgo(application.created_at)}
                 </p>
               </div>
               <Badge variant="secondary">
@@ -459,13 +420,10 @@ return (
           ))}
         </div>
       </TabsContent>
-      {/* LATEST / RECOMMENDED JOBS */}
       <TabsContent value="recommended" className="mt-6">
         <div className="mb-5 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold">
-              Latest Jobs
-            </h2>
+            <h2 className="text-lg font-semibold">Latest Jobs</h2>
             <p className="text-sm text-muted-foreground">
               Recently published opportunities in Kuwait.
             </p>
@@ -498,7 +456,7 @@ return (
           recommended.data?.length === 0 && (
             <EmptyState
               title="No jobs available yet"
-              description="New approved jobs will appear here when employers publish them."
+              description="There are currently no published jobs available."
               action={
                 <Button asChild className="mt-2">
                   <Link to="/jobs">Browse Jobs</Link>
