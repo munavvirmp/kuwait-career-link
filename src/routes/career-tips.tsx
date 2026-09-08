@@ -1,7 +1,33 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
 import { Card } from "@/components/ui/card";
-import { TIPS } from "./career-tips";
+
+const TIPS = [
+  {
+    title: "Tailor Your Resume for the Kuwait Market",
+    body: "Highlight local experience, valid Kuwait work visa status, and relevant certifications that employers in Kuwait City and Hawally look for."
+  },
+  {
+    title: "Ace Your Job Interview",
+    body: "Research the company thoroughly, dress professionally according to corporate standards in Kuwait, and prepare to discuss your past achievements clearly."
+  },
+  {
+    title: "Network with Local Professionals",
+    body: "Attend industry events, connect with recruiters on professional networks, and engage with local business groups in Kuwait to discover hidden job openings."
+  },
+  {
+    title: "Understand Kuwait Labor Laws",
+    body: "Familiarize yourself with the Kuwait Labor Law regarding working hours, annual leave, and end-of-service benefits to ensure a smooth employment journey."
+  },
+  {
+    title: "Highlight In-Demand Skills",
+    body: "Focus on upgrading skills that are currently in high demand across Kuwait's key sectors like IT, healthcare, engineering, and finance."
+  },
+  {
+    title: "Follow Up After Interviews",
+    body: "Send a polite thank-you email within 24 hours of your interview to express your gratitude and reiterate your enthusiasm for the position."
+  }
+];
 
 export const Route = createFileRoute("/career-tips")({
   head: () => ({
