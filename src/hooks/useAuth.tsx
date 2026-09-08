@@ -30,32 +30,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRole(null);
       return;
     }
-    const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-    const roles = (data ?? []).map((r) => r.role as AppRole);
-    setRole(
-      roles.includes("admin")
-        ? "admin"
-        : roles.includes("employer")
-          ? "employer"
-          : roles.includes("job_seeker")
-            ? "job_seeker"
-            : null,
-    );
+    try {
+      const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+      if (error) {
+        console.error("Error loading user role:", error);
+        setRole(null);
+        return;
+      }
+      const roles = (data ?? []).map((r) => r.role as AppRole);
+      setRole(
+        roles.includes("admin")
+          ? "admin"
+          : roles.includes("employer")
+            ? "employer"
+            : roles.includes("job_seeker")
+              ? "job_seeker"
+              : null,
+      );
+    } catch (err) {
+      console.error("Unexpected error loading role:", err);
+      setRole(null);
+    }
   };
 
   useEffect(() => {
     let active = true;
 
+    const initializeAuth = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        
+        if (!active) return;
+        setSession(data.session);
+        await loadRole(data.session?.user?.id);
+      } catch (err) {
+        console.error("Error getting session:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void initializeAuth();
+
     const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       if (!active) return;
       setSession(nextSession);
-      setTimeout(() => void loadRole(nextSession?.user?.id), 0);
-    });
-
-    void supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      void loadRole(data.session?.user?.id).finally(() => setLoading(false));
+      // Optional chaining used safely here
+      void loadRole(nextSession?.user?.id);
     });
 
     return () => {
