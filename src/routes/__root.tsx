@@ -28,9 +28,18 @@ export const Route = createRootRoute({
         name: "viewport",
         content: "width=device-width, initial-scale=1",
       },
+      { title: "KuwaitJobs — Jobs in Kuwait" },
       {
-        title: "KuwaitJobs",
+        name: "description",
+        content:
+          "Find jobs across Kuwait or post vacancies as an employer on KuwaitJobs.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
   }),
   shellComponent: RootShell,
