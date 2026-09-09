@@ -23,7 +23,7 @@ export const Route = createFileRoute("/career-tips")({
   }),
 });
 
-const TIPS = [
+export const TIPS = [
   {
     title: "Write a CV built for Kuwait employers",
     body: "Keep it to two pages, list your visa/residency status, and highlight measurable results rather than duties.",

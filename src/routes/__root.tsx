@@ -6,6 +6,8 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { AuthProvider } from "@/hooks/useAuth";
+import { Toaster } from "@/components/ui/sonner";
 
 // QueryClient പുറത്ത് നിർവചിക്കുന്നു, ಇದರಿಂದ ഓരോ തവണയും ഇത് വീണ്ടും ക്രിയേറ്റ് ചെയ്യപ്പെടില്ല.
 const queryClient = new QueryClient({
