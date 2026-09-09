@@ -105,7 +105,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!mounted) return;
 
         updateAuthState(nextSession);
-        setLoading(false);
       });
 
       subscription = result.data.subscription;
@@ -137,3 +136,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
+
