@@ -198,7 +198,7 @@ function DashboardPage() {
         .from("cvs")
         .upload(path, file, {
           upsert: true,
-          contentType: file.type || undefined,
+          ...(file.type ? { contentType: file.type } : {}),
         });
       if (uploadError) {
         throw new Error(uploadError.message);

@@ -29,7 +29,7 @@ const AuthContext = createContext<AuthContextValue>({
 function getRole(user: User | null): AppRole | null {
   if (!user) return null;
 
-  const role = user.user_metadata?.role;
+  const role = user.user_metadata?.['role'];
 
   if (role === "admin" || role === "employer" || role === "job_seeker") {
     return role;

@@ -314,7 +314,7 @@ export async function submitApplication(
     .from("cvs")
     .upload(cvPath, file, {
       upsert: false,
-      contentType: file.type || undefined,
+      ...(file.type ? { contentType: file.type } : {}),
     });
 
   if (uploadError) {

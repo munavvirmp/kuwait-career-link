@@ -55,7 +55,7 @@ function CareerTipsPage() {
     <SiteLayout>
       <PageHeader
         title="Career Tips"
-        description="Advice to help you stand out in the Kuwait job market."
+        subtitle="Advice to help you stand out in the Kuwait job market."
       />
       <div className="grid gap-4 md:grid-cols-2">
         {TIPS.map((tip) => (
