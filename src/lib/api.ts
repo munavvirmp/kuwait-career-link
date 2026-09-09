@@ -52,8 +52,11 @@ export type Job = {
   is_featured: boolean;
   is_demo: boolean;
   created_at: string;
-  companies?: Pick<Company, "id" "industry" "is_demo" "location" "name" "verification_status" |> | null;
-  categories?: Pick<Category, "id" "name" "slug" |> | null;
+  companies?: Pick<
+    Company,
+    "id" | "industry" | "is_demo" | "location" | "name" | "verification_status"
+  > | null;
+  categories?: Pick<Category, "id" | "name" | "slug"> | null;
 };
 
 export type Application = {
@@ -311,7 +314,7 @@ export async function submitApplication(
     .from("cvs")
     .upload(cvPath, file, {
       upsert: false,
-      contentType: file.type || undefined,
+      ...(file.type ? { contentType: file.type } : {}),
     });
 
   if (uploadError) {

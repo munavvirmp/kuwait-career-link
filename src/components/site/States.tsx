@@ -36,14 +36,25 @@ export function EmptyState({
   );
 }
 
-export function ErrorState({ message }: { message?: string }) {
+export function ErrorState({
+  message,
+  title,
+  description,
+  action,
+}: {
+  message?: string;
+  title?: string;
+  description?: string;
+  action?: ReactNode;
+}) {
   return (
     <Card className="items-center gap-3 border-destructive/30 p-10 text-center">
       <AlertCircle className="size-10 text-destructive" />
-      <h3 className="text-base font-semibold">Something went wrong</h3>
+      <h3 className="text-base font-semibold">{title ?? "Something went wrong"}</h3>
       <p className="max-w-md text-sm text-muted-foreground">
-        {message ?? "We couldn't load this content. Please refresh and try again."}
+        {description ?? message ?? "We couldn't load this content. Please refresh and try again."}
       </p>
+      {action}
     </Card>
   );
 }
