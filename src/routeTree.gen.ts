@@ -13,7 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as CareerTipsRouteImport } from './routes/career-tips'
 import { Route as CompaniesRouteImport } from './routes/companies'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -41,11 +40,6 @@ const AdminRoute = AdminRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CareerTipsRoute = CareerTipsRouteImport.update({
-  id: '/career-tips',
-  path: '/career-tips',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompaniesRoute = CompaniesRouteImport.update({
@@ -94,7 +88,6 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/career-tips': typeof CareerTipsRoute
   '/companies': typeof CompaniesRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
@@ -109,7 +102,6 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/career-tips': typeof CareerTipsRoute
   '/companies': typeof CompaniesRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
@@ -125,7 +117,6 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/career-tips': typeof CareerTipsRoute
   '/companies': typeof CompaniesRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
@@ -142,7 +133,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/auth'
-    | '/career-tips'
     | '/companies'
     | '/contact'
     | '/dashboard'
@@ -157,7 +147,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/auth'
-    | '/career-tips'
     | '/companies'
     | '/contact'
     | '/dashboard'
@@ -172,7 +161,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/auth'
-    | '/career-tips'
     | '/companies'
     | '/contact'
     | '/dashboard'
@@ -188,7 +176,6 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
-  CareerTipsRoute: typeof CareerTipsRoute
   CompaniesRoute: typeof CompaniesRoute
   ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRoute
@@ -227,13 +214,6 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/career-tips': {
-      id: '/career-tips'
-      path: '/career-tips'
-      fullPath: '/career-tips'
-      preLoaderRoute: typeof CareerTipsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/companies': {
@@ -300,7 +280,6 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
-  CareerTipsRoute: CareerTipsRoute,
   CompaniesRoute: CompaniesRoute,
   ContactRoute: ContactRoute,
   DashboardRoute: DashboardRoute,

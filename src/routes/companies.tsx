@@ -9,7 +9,7 @@ import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
 import { LoadingList, ErrorState, EmptyState } from "@/components/site/States";
 import { fetchCompanies, fetchCompanyJobCounts } from "@/lib/api";
 
-export const Route = createFileRoute("/companies/")({
+export const Route = createFileRoute("/companies")({
   head: () => ({
     meta: [
       { title: "Top Hiring Companies in Kuwait | Kuwait Career Link" },
