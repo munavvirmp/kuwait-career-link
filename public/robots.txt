@@ -1,8 +1,23 @@
+User-agent: *
+Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /employer
+Disallow: /admin
+
 User-agent: Googlebot
 Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /employer
+Disallow: /admin
 
 User-agent: Bingbot
 Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /employer
+Disallow: /admin
 
 User-agent: Twitterbot
 Allow: /
@@ -10,5 +25,4 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
-Allow: /
+Sitemap: https://kuwait-career-link.lovable.app/sitemap.xml
