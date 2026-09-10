@@ -54,6 +54,34 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Search jobs in Kuwait City, Hawally, Farwaniya, Ahmadi and more. Browse vacancies by category and apply online." },
       { property: "og:title", content: "KuwaitJobs — Find Your Next Job in Kuwait" },
       { property: "og:description", content: "Browse and apply to vacancies across Kuwait, or post a job as an employer." },
+      seoTags("/").urlMeta,
+    ],
+    links: seoTags("/").links,
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              name: SITE_NAME,
+              url: SITE_URL,
+              potentialAction: {
+                "@type": "SearchAction",
+                target: `${SITE_URL}/jobs?keyword={search_term_string}`,
+                "query-input": "required name=search_term_string",
+              },
+            },
+            {
+              "@type": "Organization",
+              name: SITE_NAME,
+              url: SITE_URL,
+              areaServed: "KW",
+            },
+          ],
+        }),
+      },
     ],
   }),
   component: Home,
