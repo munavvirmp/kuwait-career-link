@@ -43,6 +43,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { EmptyState, LoadingList } from "@/components/site/States";
 import { JobCard } from "@/components/jobs/JobCard";
+import { SITE_NAME, SITE_URL, seoTags } from "@/lib/seo";
 import { TIPS } from "./career-tips";
 import { fetchCategories, fetchCompanies, fetchFeaturedJobs, fetchLatestJobs, fetchCompanyJobCounts } from "@/lib/api";
 import { KUWAIT_LOCATIONS } from "@/lib/constants";
