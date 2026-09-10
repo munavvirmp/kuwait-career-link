@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
+import { seoTags } from "@/lib/seo";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -8,7 +9,9 @@ export const Route = createFileRoute("/about")({
       { name: "description", content: "Learn about KuwaitJobs, a job portal connecting job seekers and employers across Kuwait." },
       { property: "og:title", content: "About KuwaitJobs" },
       { property: "og:description", content: "A modern job portal for job seekers and employers in Kuwait." },
+      seoTags("/about").urlMeta,
     ],
+    links: seoTags("/about").links,
   }),
   component: AboutPage,
 });

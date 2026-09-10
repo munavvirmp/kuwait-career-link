@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { NOINDEX_META } from "@/lib/seo";
 
 type AuthSearch = {
   mode?: "login" | "signup" | undefined;
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Log in or register as a job seeker or employer on the KuwaitJobs portal." },
       { property: "og:title", content: "Sign In or Register — KuwaitJobs" },
       { property: "og:description", content: "Access your job seeker or employer account on KuwaitJobs." },
+      ...NOINDEX_META,
     ],
   }),
   component: AuthPage,

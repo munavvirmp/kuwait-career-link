@@ -16,6 +16,7 @@ import {
 import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
 import { EmptyState, ErrorState, LoadingList } from "@/components/site/States";
 import { JobCard } from "@/components/jobs/JobCard";
+import { seoTags } from "@/lib/seo";
 import { fetchCategories, fetchJobs } from "@/lib/api";
 import {
   EDUCATION_LEVELS,
@@ -61,7 +62,9 @@ export const Route = createFileRoute("/jobs/")({
       { name: "description", content: "Search live vacancies across Kuwait City, Hawally, Farwaniya, Ahmadi and Salmiya. Filter by salary, experience, category and job type." },
       { property: "og:title", content: "Browse Jobs in Kuwait — Kuwait Career Link" },
       { property: "og:description", content: "Filter thousands of Kuwait job vacancies by location, category, and salary range. Apply online instantly." },
+      seoTags("/jobs").urlMeta,
     ],
+    links: seoTags("/jobs").links,
   }),
   component: JobsPage,
 });
