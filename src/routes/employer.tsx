@@ -16,8 +16,8 @@ import { EmptyState, LoadingList } from "@/components/site/States";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchCategories } from "@/lib/api";
-import {
 import { NOINDEX_META } from "@/lib/seo";
+import {
   APPLICATION_STATUSES,
   EDUCATION_LEVELS,
   EXPERIENCE_LEVELS,
