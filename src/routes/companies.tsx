@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
 import { LoadingList, ErrorState, EmptyState } from "@/components/site/States";
 import { fetchCompanies, fetchCompanyJobCounts } from "@/lib/api";
+import { seoTags } from "@/lib/seo";
 
 export const Route = createFileRoute("/companies")({
   head: () => ({
@@ -16,7 +17,9 @@ export const Route = createFileRoute("/companies")({
       { name: "description", content: "Discover leading companies and corporate employers hiring in Kuwait. View open positions and build your career with top organizations." },
       { property: "og:title", content: "Top Hiring Companies in Kuwait | Kuwait Career Link" },
       { property: "og:description", content: "Discover leading companies and corporate employers hiring in Kuwait. View open positions and build your career with top organizations." },
+      seoTags("/companies").urlMeta,
     ],
+    links: seoTags("/companies").links,
   }),
   component: CompaniesPage,
 });

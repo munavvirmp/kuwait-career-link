@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
+import { seoTags } from "@/lib/seo";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -10,7 +11,9 @@ export const Route = createFileRoute("/contact")({
       { name: "description", content: "Get in touch with the KuwaitJobs team for support, employer enquiries or feedback." },
       { property: "og:title", content: "Contact KuwaitJobs" },
       { property: "og:description", content: "Support and employer enquiries for the KuwaitJobs portal." },
+      seoTags("/contact").urlMeta,
     ],
+    links: seoTags("/contact").links,
   }),
   component: ContactPage,
 });

@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchCategories } from "@/lib/api";
 import {
+import { NOINDEX_META } from "@/lib/seo";
   APPLICATION_STATUSES,
   EDUCATION_LEVELS,
   EXPERIENCE_LEVELS,
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/employer")({
       { name: "description", content: "Create your company profile, post vacancies and manage applicants on KuwaitJobs." },
       { property: "og:title", content: "Employer Dashboard — KuwaitJobs" },
       { property: "og:description", content: "Post jobs and review applicants in Kuwait." },
+      ...NOINDEX_META,
     ],
   }),
   component: EmployerPage,

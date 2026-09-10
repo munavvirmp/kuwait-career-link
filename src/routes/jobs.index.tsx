@@ -16,7 +16,7 @@ import {
 import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
 import { EmptyState, ErrorState, LoadingList } from "@/components/site/States";
 import { JobCard } from "@/components/jobs/JobCard";
-import { SITE_NAME, SITE_URL, seoTags } from "@/lib/seo";
+import { seoTags } from "@/lib/seo";
 import { fetchCategories, fetchJobs } from "@/lib/api";
 import {
   EDUCATION_LEVELS,

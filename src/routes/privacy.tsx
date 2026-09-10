@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
+import { seoTags } from "@/lib/seo";
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
@@ -8,7 +9,9 @@ export const Route = createFileRoute("/privacy")({
       { name: "description", content: "How KuwaitJobs collects, uses and protects your personal data and CV files." },
       { property: "og:title", content: "Privacy Policy — KuwaitJobs" },
       { property: "og:description", content: "How KuwaitJobs handles personal data and CV files." },
+      seoTags("/privacy").urlMeta,
     ],
+    links: seoTags("/privacy").links,
   }),
   component: PrivacyPage,
 });

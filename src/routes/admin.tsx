@@ -13,6 +13,7 @@ import { EmptyState, LoadingList } from "@/components/site/States";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { statusLabel, timeAgo } from "@/lib/constants";
+import { NOINDEX_META } from "@/lib/seo";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/admin")({
       { name: "description", content: "Moderate jobs, companies, users and applications across the KuwaitJobs portal." },
       { property: "og:title", content: "Admin Dashboard — KuwaitJobs" },
       { property: "og:description", content: "Moderation and statistics for the KuwaitJobs portal." },
+      ...NOINDEX_META,
     ],
   }),
   component: AdminPage,

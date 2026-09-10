@@ -22,6 +22,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { statusLabel, timeAgo } from "@/lib/constants";
 import type { Application, Job } from "@/lib/api";
+import { NOINDEX_META } from "@/lib/seo";
 
 const JOB_SELECT =
   "*, companies:company_id(id,name,industry,location,is_demo), categories:category_id(id,name,slug)";
@@ -46,6 +47,7 @@ export const Route = createFileRoute("/dashboard")({
         content:
           "Profile, CV, saved jobs and application status in one place.",
       },
+      ...NOINDEX_META,
     ],
   }),
   component: DashboardPage,

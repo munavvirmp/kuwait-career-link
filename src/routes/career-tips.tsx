@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { PageHeader, SiteLayout } from "@/components/site/SiteLayout";
+import { seoTags } from "@/lib/seo";
 
 export const Route = createFileRoute("/career-tips")({
   component: CareerTipsPage,
@@ -19,7 +20,9 @@ export const Route = createFileRoute("/career-tips")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      seoTags("/career-tips").urlMeta,
     ],
+    links: seoTags("/career-tips").links,
   }),
 });
 
