@@ -312,7 +312,7 @@ export function CvOnlyAnalyzer() {
     <div className="space-y-6 rounded-xl border p-5">
       <div>
         <h2 className="text-xl font-bold">
-          &#x1F916; AI CV ATS Analyzer
+            AI CV ATS Analyzer
         </h2>
 
         <p className="mt-1 text-sm text-muted-foreground">
@@ -428,6 +428,7 @@ export function CvOnlyAnalyzer() {
     </div>
   );
 }
+
 
 
 

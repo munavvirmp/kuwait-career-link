@@ -183,7 +183,7 @@ export function CvAnalyzer({
       <Card className="gap-5 p-6 shadow-card">
         <div>
           <h2 className="text-lg font-semibold">
-            🤖 AI CV Job Match Analyzer
+            AI CV Job Match Analyzer
           </h2>
 
           <p className="mt-1 text-sm text-muted-foreground">
@@ -570,6 +570,7 @@ function fileToBase64(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
 
 
 
