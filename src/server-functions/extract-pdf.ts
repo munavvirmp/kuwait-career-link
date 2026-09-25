@@ -12,9 +12,9 @@ export const extractPdfText = createServerFn({ method: "POST" }).handler(
       ""
     );
 
-    const pdfBuffer = Buffer.from(base64, "base64");
+    const binary = Uint8Array.from(Buffer.from(base64, "base64"));
 
-    const { text, totalPages } = await extractText(pdfBuffer);
+    const { text, totalPages } = await extractText(binary);
 
     return {
       success: true,
