@@ -12,10 +12,12 @@ export const extractPdfText = createServerFn({ method: "POST" }).handler(
       ""
     );
 
+    const pdfBuffer = Buffer.from(base64, "base64");
+
     const pdf = await getDocument({
-  data: new Uint8Array(pdfBuffer),
-  disableWorker: true,
-}).promise;
+      data: new Uint8Array(pdfBuffer),
+      disableWorker: true,
+    }).promise;
 
     let text = "";
 
