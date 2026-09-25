@@ -183,7 +183,7 @@ export function CvAnalyzer({
       <Card className="gap-5 p-6 shadow-card">
         <div>
           <h2 className="text-lg font-semibold">
-            ðŸ¤– AI CV Job Match Analyzer
+            🤖 AI CV Job Match Analyzer
           </h2>
 
           <p className="mt-1 text-sm text-muted-foreground">
@@ -222,7 +222,7 @@ export function CvAnalyzer({
           />
 
           <p className="text-xs text-muted-foreground">
-            PDF only Â· Maximum 10 MB
+            PDF only · Maximum 10 MB
           </p>
 
           {file && (
@@ -255,7 +255,7 @@ export function CvAnalyzer({
         >
           {analyzing
             ? "â³ Analyzing CV..."
-            : "ðŸ¤– Analyze My CV"}
+            : "🤖 Analyze My CV"}
         </Button>
       </Card>
 
@@ -570,4 +570,6 @@ function fileToBase64(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
+
 
