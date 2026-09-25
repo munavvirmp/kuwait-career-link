@@ -1,5 +1,5 @@
-import { createServerFn } from "@tanstack/react-start";
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+﻿import { createServerFn } from "@tanstack/react-start";
+import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 
 export const extractPdfText = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: { pdfBase64: string } }) => {
@@ -12,11 +12,10 @@ export const extractPdfText = createServerFn({ method: "POST" }).handler(
       ""
     );
 
-    const pdfBuffer = Buffer.from(base64, "base64");
-
-    const pdf = await pdfjsLib.getDocument({
-      data: new Uint8Array(pdfBuffer),
-    }).promise;
+    const pdf = await getDocument({
+  data: new Uint8Array(pdfBuffer),
+  disableWorker: true,
+}).promise;
 
     let text = "";
 
