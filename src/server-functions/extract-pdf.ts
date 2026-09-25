@@ -1,5 +1,5 @@
 ﻿import { createServerFn } from "@tanstack/react-start";
-import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { extractText } from "unpdf";
 
 export const extractPdfText = createServerFn({ method: "POST" }).handler(
   async ({ data }: { data: { pdfBase64: string } }) => {
@@ -14,28 +14,12 @@ export const extractPdfText = createServerFn({ method: "POST" }).handler(
 
     const pdfBuffer = Buffer.from(base64, "base64");
 
-    const pdf = await getDocument({
-      data: new Uint8Array(pdfBuffer),
-      disableWorker: true,
-    }).promise;
-
-    let text = "";
-
-    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-      const page = await pdf.getPage(pageNumber);
-      const content = await page.getTextContent();
-
-      const pageText = content.items
-        .map((item) => ("str" in item ? item.str : ""))
-        .join(" ");
-
-      text += pageText + "\n";
-    }
+    const { text, totalPages } = await extractText(pdfBuffer);
 
     return {
       success: true,
-      text: text.trim(),
-      pages: pdf.numPages,
+      text: text.join("\n").trim(),
+      pages: totalPages,
     };
   }
 );
