@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { Briefcase, Mail, Phone } from "lucide-react";
-
 export function Footer() {
   return (
     <footer className="mt-20 border-t border-border bg-surface">
@@ -15,11 +14,9 @@ export function Footer() {
             </span>
           </div>
           <p className="mt-3 text-sm text-muted-foreground">
-            A job portal connecting job seekers and employers across Kuwait. All listings currently
-            shown are clearly labelled sample demo data.
+            A job portal connecting job seekers and employers across Kuwait.
           </p>
         </div>
-
         <div>
           <h3 className="text-sm font-semibold">Explore</h3>
           <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
@@ -40,7 +37,6 @@ export function Footer() {
             </li>
           </ul>
         </div>
-
         <div>
           <h3 className="text-sm font-semibold">Company</h3>
           <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
@@ -66,7 +62,6 @@ export function Footer() {
             </li>
           </ul>
         </div>
-
         <div>
           <h3 className="text-sm font-semibold">Get in touch</h3>
           <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
@@ -79,9 +74,8 @@ export function Footer() {
           </ul>
         </div>
       </div>
-
       <div className="border-t border-border px-4 py-5 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} KuwaitJobs. Demonstration project — sample listings only.
+        ©️ {new Date().getFullYear()} KuwaitJobs. All rights reserved.
       </div>
     </footer>
   );

@@ -1,8 +1,9 @@
+import { CvAnalyzer } from "@/components/ai/CvAnalyzer";
+import { CvOnlyAnalyzer } from "@/components/ai/CvOnlyAnalyzer";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,20 +15,28 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-
-import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
+import { SiteLayout } from "@/components/site/SiteLayout";
 import { EmptyState, LoadingList } from "@/components/site/States";
 import { JobCard } from "@/components/jobs/JobCard";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { statusLabel, timeAgo } from "@/lib/constants";
-import type { Application, Job } from "@/lib/api";
+import {
+  getApplicationCvUrl,
+  type Application,
+  type Job,
+} from "@/lib/api";
 import { NOINDEX_META } from "@/lib/seo";
-
 const JOB_SELECT =
   "*, companies:company_id(id,name,industry,location,is_demo), categories:category_id(id,name,slug)";
-
 export const Route = createFileRoute("/dashboard")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: search.tab === "cv" ? "cv" : undefined,
+    jobDescription:
+      typeof search.jobDescription === "string"
+        ? search.jobDescription
+        : undefined,
+  }),
   head: () => ({
     meta: [
       {
@@ -52,36 +61,31 @@ export const Route = createFileRoute("/dashboard")({
   }),
   component: DashboardPage,
 });
-
 function DashboardPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
+  const { tab, jobDescription } = Route.useSearch();
   const [form, setForm] = useState({
     full_name: "",
     phone: "",
     location: "",
     headline: "",
   });
-
   useEffect(() => {
     if (loading) return;
     if (user) return;
-
     void navigate({
       to: "/auth",
       search: { mode: "login" },
       replace: true,
     });
   }, [loading, user, navigate]);
-
   const profile = useQuery({
     queryKey: ["profile", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async () => {
       if (!user) return null;
-
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -91,10 +95,8 @@ function DashboardPage() {
       return data;
     },
   });
-
   useEffect(() => {
     if (!profile.data) return;
-
     setForm({
       full_name: profile.data.full_name ?? "",
       phone: profile.data.phone ?? "",
@@ -102,13 +104,11 @@ function DashboardPage() {
       headline: profile.data.headline ?? "",
     });
   }, [profile.data]);
-
   const saved = useQuery({
     queryKey: ["saved-jobs", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async () => {
       if (!user) return [];
-
       const { data, error } = await supabase
         .from("saved_jobs")
         .select(`id, jobs:job_id(${JOB_SELECT})`)
@@ -120,13 +120,11 @@ function DashboardPage() {
         .filter(Boolean);
     },
   });
-
   const applications = useQuery({
     queryKey: ["my-applications", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async () => {
       if (!user) return [];
-
       const { data, error } = await supabase
         .from("applications")
         .select(`*, jobs:job_id(${JOB_SELECT})`)
@@ -136,7 +134,6 @@ function DashboardPage() {
       return (data ?? []) as unknown as Application[];
     },
   });
-
   const recommended = useQuery({
     queryKey: ["recommended-jobs", user?.id],
     enabled: Boolean(user?.id),
@@ -151,13 +148,11 @@ function DashboardPage() {
       return (data ?? []) as unknown as Job[];
     },
   });
-
   const saveProfile = useMutation({
     mutationFn: async () => {
       if (!user) {
         throw new Error("You must be signed in.");
       }
-
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -181,13 +176,11 @@ function DashboardPage() {
       toast.error(error.message);
     },
   });
-
   const uploadCv = useMutation({
     mutationFn: async (file: File) => {
       if (!user) {
         throw new Error("You must be signed in.");
       }
-
       const extension = file.name.split(".").pop()?.toLowerCase();
       if (!extension || !["pdf", "doc", "docx"].includes(extension)) {
         throw new Error("CV must be a PDF, DOC or DOCX file.");
@@ -226,7 +219,6 @@ function DashboardPage() {
       toast.error(error.message);
     },
   });
-
   if (loading || !user) {
     return (
       <SiteLayout>
@@ -236,11 +228,10 @@ function DashboardPage() {
       </SiteLayout>
     );
   }
-
   return (
     <SiteLayout>
       <div className="mx-auto max-w-6xl px-4 py-8">
-        <Tabs defaultValue="profile">
+        <Tabs defaultValue={tab ?? "profile"}>
           <TabsList className="flex flex-wrap gap-1">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="cv">CV</TabsTrigger>
@@ -248,6 +239,7 @@ function DashboardPage() {
             <TabsTrigger value="applied">Applied Jobs</TabsTrigger>
             <TabsTrigger value="recommended">Latest Jobs</TabsTrigger>
           </TabsList>
+          {/* PROFILE */}
           <TabsContent value="profile" className="mt-6">
             <Card className="max-w-xl gap-4 p-6 shadow-card">
               <div className="grid gap-1.5">
@@ -265,7 +257,9 @@ function DashboardPage() {
                 />
               </div>
               <div className="grid gap-1.5">
-                <Label htmlFor="headline">Professional headline</Label>
+                <Label htmlFor="headline">
+                  Professional headline
+                </Label>
                 <Input
                   id="headline"
                   value={form.headline}
@@ -313,13 +307,18 @@ function DashboardPage() {
                 onClick={() => saveProfile.mutate()}
                 disabled={saveProfile.isPending}
               >
-                {saveProfile.isPending ? "Saving..." : "Save Changes"}
+                {saveProfile.isPending
+                  ? "Saving..."
+                  : "Save Changes"}
               </Button>
             </Card>
           </TabsContent>
+          {/* CV + AI ANALYZER */}
           <TabsContent value="cv" className="mt-6">
             <Card className="max-w-xl gap-4 p-6 shadow-card">
-              <h2 className="text-base font-semibold">Upload Your CV</h2>
+              <h2 className="text-base font-semibold">
+                Upload Your CV
+              </h2>
               <p className="text-sm text-muted-foreground">
                 {profile.data?.cv_name
                   ? `Current file: ${profile.data.cv_name}`
@@ -343,7 +342,12 @@ function DashboardPage() {
                   : "Accepted formats: PDF, DOC, DOCX. Maximum size: 10 MB."}
               </p>
             </Card>
+            <CvOnlyAnalyzer />
+            <CvAnalyzer
+              initialJobDescription={jobDescription ?? ""}
+            />
           </TabsContent>
+          {/* SAVED JOBS */}
           <TabsContent value="saved" className="mt-6">
             {saved.isLoading && <LoadingList />}
             {saved.isError && (
@@ -371,6 +375,7 @@ function DashboardPage() {
               ))}
             </div>
           </TabsContent>
+          {/* APPLIED JOBS */}
           <TabsContent value="applied" className="mt-6">
             {applications.isLoading && <LoadingList />}
             {applications.isError && (
@@ -403,21 +408,49 @@ function DashboardPage() {
                       {application.jobs?.title ?? "Job"}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {application.jobs?.companies?.name ?? "Company"} · applied{" "}
-                      {timeAgo(application.created_at)}
+                      {application.jobs?.companies?.name ?? "Company"}{" "}
+                      · applied {timeAgo(application.created_at)}
                     </p>
                   </div>
                   <Badge variant="secondary">
                     {statusLabel(application.status)}
                   </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!application.cv_url}
+                    onClick={async () => {
+                      try {
+                        if (!application.cv_url) {
+                          toast.error("CV is not available.");
+                          return;
+                        }
+                        const url = await getApplicationCvUrl(
+                          application.cv_url
+                        );
+                        window.open(
+                          url,
+                          "_blank",
+                          "noopener,noreferrer"
+                        );
+                      } catch {
+                        toast.error("Unable to open CV.");
+                      }
+                    }}
+                  >
+                    View CV
+                  </Button>
                 </Card>
               ))}
             </div>
           </TabsContent>
+          {/* LATEST JOBS */}
           <TabsContent value="recommended" className="mt-6">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold">Latest Jobs</h2>
+                <h2 className="text-lg font-semibold">
+                  Latest Jobs
+                </h2>
                 <p className="text-sm text-muted-foreground">
                   Recently published opportunities in Kuwait.
                 </p>
@@ -426,7 +459,9 @@ function DashboardPage() {
                 <Link to="/jobs">View All Jobs</Link>
               </Button>
             </div>
-            {recommended.isLoading && <LoadingList count={4} />}
+            {recommended.isLoading && (
+              <LoadingList count={4} />
+            )}
             {recommended.isError && (
               <EmptyState
                 title="Unable to load jobs"

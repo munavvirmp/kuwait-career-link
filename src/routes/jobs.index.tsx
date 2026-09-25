@@ -26,7 +26,6 @@ import {
   POSTED_WITHIN,
   SALARY_RANGES,
 } from "@/lib/constants";
-
 type JobSearch = {
   keyword?: string | undefined;
   location?: string | undefined;
@@ -39,9 +38,7 @@ type JobSearch = {
   sort?: "latest" | "salary_asc" | "salary_desc" | undefined;
   page?: number | undefined;
 };
-
 const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
-
 export const Route = createFileRoute("/jobs/")({
   validateSearch: (search: Record<string, unknown>): JobSearch => ({
     keyword: str(search["keyword"]),
@@ -53,34 +50,46 @@ export const Route = createFileRoute("/jobs/")({
     salary: str(search["salary"]),
     posted: str(search["posted"]),
     sort:
-      search["sort"] === "salary_asc" || search["sort"] === "salary_desc" ? search["sort"] : "latest",
+      search["sort"] === "salary_asc" || search["sort"] === "salary_desc"
+        ? search["sort"]
+        : "latest",
     page: Number(search["page"] ?? 1) || 1,
   }),
   head: () => ({
     meta: [
       { title: "Browse & Apply for Latest Jobs in Kuwait — Kuwait Career Link" },
-      { name: "description", content: "Search live vacancies across Kuwait City, Hawally, Farwaniya, Ahmadi and Salmiya. Filter by salary, experience, category and job type." },
-      { property: "og:title", content: "Browse Jobs in Kuwait — Kuwait Career Link" },
-      { property: "og:description", content: "Filter thousands of Kuwait job vacancies by location, category, and salary range. Apply online instantly." },
+      {
+        name: "description",
+        content:
+          "Search live vacancies across Kuwait City, Hawally, Farwaniya, Ahmadi and Salmiya. Filter by salary, experience, category and job type.",
+      },
+      {
+        property: "og:title",
+        content: "Browse Jobs in Kuwait — Kuwait Career Link",
+      },
+      {
+        property: "og:description",
+        content:
+          "Find Kuwait job vacancies by location, category, salary range and job type. Apply online instantly.",
+      },
       seoTags("/jobs").urlMeta,
     ],
     links: seoTags("/jobs").links,
   }),
   component: JobsPage,
 });
-
 const PAGE_SIZE = 8;
-
 function JobsPage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const [keyword, setKeyword] = useState(search.keyword ?? "");
   const [showFilters, setShowFilters] = useState(false);
-
-  const categories = useQuery({ queryKey: ["categories"], queryFn: fetchCategories });
+  const categories = useQuery({
+    queryKey: ["categories"],
+    queryFn: fetchCategories,
+  });
   const salaryRange = SALARY_RANGES.find((r) => r.value === search.salary);
   const posted = POSTED_WITHIN.find((p) => p.value === search.posted);
-
   const jobs = useQuery({
     queryKey: ["jobs", search],
     placeholderData: keepPreviousData,
@@ -100,15 +109,19 @@ function JobsPage() {
         pageSize: PAGE_SIZE,
       }),
   });
-
   function update(patch: Partial<JobSearch>) {
-    void navigate({ to: ".", search: (prev) => ({ ...prev, ...patch, page: patch.page ?? 1 }) });
+    void navigate({
+      to: ".",
+      search: (prev) => ({
+        ...prev,
+        ...patch,
+        page: patch.page ?? 1,
+      }),
+    });
   }
-
   const total = jobs.data?.total ?? 0;
   const page = search.page ?? 1;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-
   const filterSelect = (
     label: string,
     value: string | undefined,
@@ -119,7 +132,11 @@ function JobsPage() {
       <Label className="text-xs text-muted-foreground">{label}</Label>
       <Select
         value={value ?? "any"}
-        onValueChange={(v) => update({ [key]: v === "any" ? undefined : v } as Partial<JobSearch>)}
+        onValueChange={(v) =>
+          update({
+            [key]: v === "any" ? undefined : v,
+          } as Partial<JobSearch>)
+        }
       >
         <SelectTrigger className="w-full">
           <SelectValue />
@@ -135,11 +152,12 @@ function JobsPage() {
       </Select>
     </div>
   );
-
   return (
     <SiteLayout>
-      <PageHeader title="Jobs in Kuwait" subtitle="All listings shown are clearly labelled sample demo data." />
-
+      <PageHeader
+        title="Jobs in Kuwait"
+        subtitle="Find the latest job opportunities in Kuwait."
+      />
       <div className="mx-auto max-w-6xl px-4 py-8">
         <form
           className="flex flex-col gap-3 sm:flex-row"
@@ -158,73 +176,162 @@ function JobsPage() {
             />
           </div>
           <Button type="submit">Search Jobs</Button>
-          <Button type="button" variant="outline" className="lg:hidden" onClick={() => setShowFilters((s) => !s)}>
+          <Button
+            type="button"
+            variant="outline"
+            className="lg:hidden"
+            onClick={() => setShowFilters((s) => !s)}
+          >
             <SlidersHorizontal className="size-4" /> Filters
           </Button>
         </form>
-
         <div className="mt-6 grid gap-6 lg:grid-cols-[280px_1fr]">
-          <Card className={`h-fit gap-4 p-5 shadow-card ${showFilters ? "" : "hidden lg:flex"}`}>
+          <Card
+            className={`h-fit gap-4 p-5 shadow-card ${
+              showFilters ? "" : "hidden lg:flex"
+            }`}
+          >
             <h2 className="text-sm font-semibold">Filters</h2>
-            {filterSelect("Location", search.location, KUWAIT_LOCATIONS.map((l) => ({ label: l, value: l })), "location")}
+            {filterSelect(
+              "Location",
+              search.location,
+              KUWAIT_LOCATIONS.map((l) => ({
+                label: l,
+                value: l,
+              })),
+              "location",
+            )}
             {filterSelect(
               "Category",
               search.category,
-              (categories.data ?? []).map((c) => ({ label: c.name, value: c.id })),
+              (categories.data ?? []).map((c) => ({
+                label: c.name,
+                value: c.id,
+              })),
               "category",
             )}
-            {filterSelect("Salary range", search.salary, SALARY_RANGES.filter((s) => s.value !== "any").map((s) => ({ label: s.label, value: s.value })), "salary")}
-            {filterSelect("Experience level", search.experience, EXPERIENCE_LEVELS.map((l) => ({ label: l, value: l })), "experience")}
-            {filterSelect("Job type", search.jobType, JOB_TYPES.map((l) => ({ label: l, value: l })), "jobType")}
-            {filterSelect("Education", search.education, EDUCATION_LEVELS.map((l) => ({ label: l, value: l })), "education")}
-            {filterSelect("Posted date", search.posted, POSTED_WITHIN.filter((p) => p.value !== "any").map((p) => ({ label: p.label, value: p.value })), "posted")}
+            {filterSelect(
+              "Salary range",
+              search.salary,
+              SALARY_RANGES.filter((s) => s.value !== "any").map((s) => ({
+                label: s.label,
+                value: s.value,
+              })),
+              "salary",
+            )}
+            {filterSelect(
+              "Experience level",
+              search.experience,
+              EXPERIENCE_LEVELS.map((l) => ({
+                label: l,
+                value: l,
+              })),
+              "experience",
+            )}
+            {filterSelect(
+              "Job type",
+              search.jobType,
+              JOB_TYPES.map((l) => ({
+                label: l,
+                value: l,
+              })),
+              "jobType",
+            )}
+            {filterSelect(
+              "Education",
+              search.education,
+              EDUCATION_LEVELS.map((l) => ({
+                label: l,
+                value: l,
+              })),
+              "education",
+            )}
+            {filterSelect(
+              "Posted date",
+              search.posted,
+              POSTED_WITHIN.filter((p) => p.value !== "any").map((p) => ({
+                label: p.label,
+                value: p.value,
+              })),
+              "posted",
+            )}
             <Button
               variant="outline"
               onClick={() => {
                 setKeyword("");
-                void navigate({ to: ".", search: () => ({ sort: "latest", page: 1 }) });
+                void navigate({
+                  to: ".",
+                  search: () => ({
+                    sort: "latest",
+                    page: 1,
+                  }),
+                });
               }}
             >
               Clear filters
             </Button>
           </Card>
-
           <div>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-muted-foreground">
-                {jobs.isLoading ? "Loading jobs…" : `${total} job${total === 1 ? "" : "s"} found`}
+                {jobs.isLoading
+                  ? "Loading jobs…"
+                  : `${total} job${total === 1 ? "" : "s"} found`}
               </p>
-              <Select value={search.sort ?? "latest"} onValueChange={(v) => update({ sort: v as JobSearch["sort"] })}>
+              <Select
+                value={search.sort ?? "latest"}
+                onValueChange={(v) =>
+                  update({
+                    sort: v as JobSearch["sort"],
+                  })
+                }
+              >
                 <SelectTrigger className="w-52">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="latest">Latest</SelectItem>
-                  <SelectItem value="salary_asc">Salary: Low to High</SelectItem>
-                  <SelectItem value="salary_desc">Salary: High to Low</SelectItem>
+                  <SelectItem value="salary_asc">
+                    Salary: Low to High
+                  </SelectItem>
+                  <SelectItem value="salary_desc">
+                    Salary: High to Low
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
             {jobs.isLoading ? <LoadingList /> : null}
             {jobs.isError ? <ErrorState /> : null}
             {jobs.data && jobs.data.jobs.length === 0 ? (
-              <EmptyState title="No jobs match your filters" description="Try widening your search or clearing some filters." />
+              <EmptyState
+                title="No jobs match your filters"
+                description="Try widening your search or clearing some filters."
+              />
             ) : null}
-
             <div className="grid gap-4">
-              {jobs.data?.jobs.map((job) => <JobCard key={job.id} job={job} />)}
+              {jobs.data?.jobs.map((job) => (
+                <JobCard key={job.id} job={job} />
+              ))}
             </div>
-
             {pages > 1 ? (
               <div className="mt-8 flex items-center justify-center gap-2">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => update({ page: page - 1 })}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => update({ page: page - 1 })}
+                >
                   Previous
                 </Button>
                 <span className="text-sm text-muted-foreground">
                   Page {page} of {pages}
                 </span>
-                <Button variant="outline" size="sm" disabled={page >= pages} onClick={() => update({ page: page + 1 })}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= pages}
+                  onClick={() => update({ page: page + 1 })}
+                >
                   Next
                 </Button>
               </div>
