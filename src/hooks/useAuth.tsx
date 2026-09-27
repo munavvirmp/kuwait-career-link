@@ -26,16 +26,28 @@ const AuthContext = createContext<AuthContextValue>({
   refreshRole: async () => {},
 });
 
-function getRole(user: User | null): AppRole | null {
+async function getRole(user: User | null): Promise<AppRole | null> {
   if (!user) return null;
 
-  const role = user.user_metadata?.['role'];
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to load user role:", error);
+    return null;
+  }
+
+  const role = data?.role;
 
   if (role === "admin" || role === "employer" || role === "job_seeker") {
     return role;
   }
 
-  return "job_seeker";
+  return null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -44,12 +56,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const updateAuthState = (nextSession: Session | null) => {
+  const updateAuthState = async (nextSession: Session | null) => {
     const nextUser = nextSession?.user ?? null;
 
     setSession(nextSession);
     setUser(nextUser);
-    setRole(getRole(nextUser));
+
+    const nextRole = await getRole(nextUser);
+    setRole(nextRole);
   };
 
   const refreshRole = async () => {
@@ -61,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      updateAuthState(data.session);
+      await updateAuthState(data.session);
     } catch (error) {
       console.error("Failed to refresh auth state:", error);
     }
@@ -78,16 +92,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (error) {
           console.error("Supabase auth initialization error:", error);
-          updateAuthState(null);
+          await updateAuthState(null);
           return;
         }
 
-        updateAuthState(data.session);
+        await updateAuthState(data.session);
       } catch (error) {
         console.error("Failed to initialize authentication:", error);
 
         if (mounted) {
-          updateAuthState(null);
+          await updateAuthState(null);
         }
       } finally {
         if (mounted) {
@@ -104,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = supabase.auth.onAuthStateChange((_event, nextSession) => {
         if (!mounted) return;
 
-        updateAuthState(nextSession);
+        void updateAuthState(nextSession);
       });
 
       subscription = result.data.subscription;
@@ -136,4 +150,3 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
-
