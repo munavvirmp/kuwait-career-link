@@ -1,16 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export const analyzeCvAgainstJob = createServerFn({ method: "POST" }).handler(
-  async ({
-    data,
-  }: {
-    data: {
-      cvText: string;
-      jobDescription: string;
-    };
-  }) => {
+export const analyzeCvAgainstJob = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(
+    async ({
+      context,
+      data,
+    }) => {
     const cvText = data.cvText?.trim();
     const jobDescription = data.jobDescription?.trim();
+
+    const MAX_CV_TEXT_LENGTH = 100_000;
+    const MAX_JOB_DESCRIPTION_LENGTH = 50_000;
 
     if (!cvText) {
       throw new Error("CV text is required");
@@ -18,6 +20,28 @@ export const analyzeCvAgainstJob = createServerFn({ method: "POST" }).handler(
 
     if (!jobDescription) {
       throw new Error("Job description is required");
+    }
+
+    if (cvText.length > MAX_CV_TEXT_LENGTH) {
+      throw new Error("CV text is too large.");
+    }
+
+    if (jobDescription.length > MAX_JOB_DESCRIPTION_LENGTH) {
+      throw new Error("Job description is too large.");
+    }
+
+    const { data: allowed, error: rateLimitError } =
+      await context.supabase.rpc("check_ai_rate_limit", {
+        _endpoint: "analyze-cv",
+      });
+
+    if (rateLimitError) {
+      console.error("AI rate-limit check failed:", rateLimitError);
+      throw new Error("Unable to process AI request.");
+    }
+
+    if (!allowed) {
+      throw new Error("AI rate limit exceeded. Please try again later.");
     }
 
     const prompt = `

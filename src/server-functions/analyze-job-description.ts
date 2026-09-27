@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type JobAnalysisResult = {
   jobTitle: string;
@@ -205,15 +206,44 @@ function buildFallbackKeywords(result: JobAnalysisResult): string[] {
 
 export const analyzeJobDescription = createServerFn({
   method: "POST",
-}).handler(async ({ data }: { data: { jobDescription: string } }) => {
+})
+  .middleware([requireSupabaseAuth])
+  .handler(
+    async ({
+      context,
+      data,
+    }: {
+      context: any;
+      data: { jobDescription: string };
+    }) => {
   const jobDescription = data.jobDescription?.trim();
 
   if (!jobDescription) {
     throw new Error("Job description is required");
   }
 
+  const MAX_JOB_DESCRIPTION_LENGTH = 50_000;
+
   if (jobDescription.length < 20) {
     throw new Error("Please provide a more complete job description");
+  }
+
+  if (jobDescription.length > MAX_JOB_DESCRIPTION_LENGTH) {
+    throw new Error("Job description is too large.");
+  }
+
+  const { data: allowed, error: rateLimitError } =
+    await context.supabase.rpc("check_ai_rate_limit", {
+      _endpoint: "analyze-job-description",
+    });
+
+  if (rateLimitError) {
+    console.error("AI rate-limit check failed:", rateLimitError);
+    throw new Error("Unable to process AI request.");
+  }
+
+  if (!allowed) {
+    throw new Error("AI rate limit exceeded. Please try again later.");
   }
 
   const prompt = `

@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type CvExperience = {
   title: string;
@@ -1406,21 +1407,47 @@ function calculateAtsScore(
 export const analyzeCvOnly =
   createServerFn({
     method: "POST",
-  }).handler(
-    async ({
-      data,
-    }: {
-      data: {
-        cvText: string;
-      };
-    }) => {
+  })
+    .middleware([requireSupabaseAuth])
+    .handler(
+      async ({
+        context,
+        data,
+      }: {
+        context: any;
+        data: {
+          cvText: string;
+        };
+      }) => {
       const cvText =
         data.cvText?.trim();
+
+      const MAX_CV_TEXT_LENGTH = 100_000;
 
       if (!cvText) {
         throw new Error(
           "CV text is required"
         );
+      }
+
+      if (cvText.length > MAX_CV_TEXT_LENGTH) {
+        throw new Error(
+          "CV text is too large."
+        );
+      }
+
+      const { data: allowed, error: rateLimitError } =
+        await context.supabase.rpc("check_ai_rate_limit", {
+          _endpoint: "analyze-cv-only",
+        });
+
+      if (rateLimitError) {
+        console.error("AI rate-limit check failed:", rateLimitError);
+        throw new Error("Unable to process AI request.");
+      }
+
+      if (!allowed) {
+        throw new Error("AI rate limit exceeded. Please try again later.");
       }
 
       const prompt = `
