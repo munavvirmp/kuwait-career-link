@@ -180,11 +180,11 @@ export async function fetchCompanyJobCounts() {
 }
 
 export type ApplicationStatus =
-  | "Applied"
-  | "Shortlisted"
-  | "Interview"
-  | "Selected"
-  | "Rejected";
+  | "applied"
+  | "shortlisted"
+  | "interview"
+  | "selected"
+  | "rejected";
 
 export type SubmitApplicationInput = {
   jobId: string;
@@ -292,7 +292,7 @@ export async function submitApplication(
       email: input.email.trim(),
       phone: input.phone?.trim() || null,
       cover_letter: input.coverLetter?.trim() || null,
-      status: "Applied",
+      status: "applied",
       cv_url: null,
     })
     .select("*")
@@ -416,11 +416,11 @@ export async function updateApplicationStatus(
   status: ApplicationStatus,
 ) {
   const validStatuses: ApplicationStatus[] = [
-    "Applied",
-    "Shortlisted",
-    "Interview",
-    "Selected",
-    "Rejected",
+    "applied",
+    "shortlisted",
+    "interview",
+    "selected",
+    "rejected",
   ];
 
   if (!validStatuses.includes(status)) {
