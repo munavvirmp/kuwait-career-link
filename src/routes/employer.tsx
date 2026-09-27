@@ -58,7 +58,7 @@ const emptyJob = {
 };
 
 function EmployerPage() {
-  const { user, loading } = useAuth();
+  const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -66,8 +66,21 @@ function EmployerPage() {
   const [companyForm, setCompanyForm] = useState({ name: "", industry: "", location: "Kuwait City", website: "", contact_email: "", description: "" });
 
   useEffect(() => {
-    if (!loading && !user) void navigate({ to: "/auth", search: { mode: "login", role: "employer" }, replace: true });
-  }, [user, loading, navigate]);
+    if (loading) return;
+
+    if (!user) {
+      void navigate({
+        to: "/auth",
+        search: { mode: "login", role: "employer" },
+        replace: true,
+      });
+      return;
+    }
+
+    if (role !== "employer") {
+      void navigate({ to: "/dashboard", replace: true });
+    }
+  }, [user, role, loading, navigate]);
 
   const categories = useQuery({ queryKey: ["categories"], queryFn: fetchCategories });
 
