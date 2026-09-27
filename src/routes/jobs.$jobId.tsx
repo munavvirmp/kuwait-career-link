@@ -30,7 +30,7 @@ import {
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { ErrorState, LoadingList } from "@/components/site/States";
 import { SaveJobButton } from "@/components/jobs/SaveJobButton";
-import { fetchJob } from "@/lib/api";
+import { fetchJob, submitApplication } from "@/lib/api";
 import { formatSalary, statusLabel, timeAgo } from "@/lib/constants";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -455,25 +455,18 @@ function ApplyDialog({
         );
       }
 
-      const fullName =
-        form.full_name.trim();
+      const fullName = form.full_name.trim();
 
-      if (
-        fullName.length < 2 ||
-        fullName.length > 100
-      ) {
+      if (fullName.length < 2 || fullName.length > 100) {
         throw new Error(
           "Please enter your full name (2-100 characters)."
         );
       }
 
-      const email =
-        form.email.trim();
+      const email = form.email.trim();
 
       if (
-        !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(
-          email
-        ) ||
+        !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ||
         email.length > 255
       ) {
         throw new Error(
@@ -481,108 +474,40 @@ function ApplyDialog({
         );
       }
 
-      const phone =
-        form.phone.trim();
+      const phone = form.phone.trim();
 
-      if (
-        phone &&
-        !/^[+\d][\d\s-]{6,19}$/.test(
-          phone
-        )
-      ) {
+      if (phone && !/^[+\d][\d\s-]{6,19}$/.test(phone)) {
         throw new Error(
           "Please enter a valid phone number."
         );
       }
 
-      if (
-        form.cover_letter.length > 3000
-      ) {
+      if (form.cover_letter.length > 3000) {
         throw new Error(
           "Cover letter must be under 3000 characters."
         );
       }
 
-      let cvPath =
-        useSavedCv && savedCv
-          ? savedCv
-          : null;
-
-      if (!cvPath) {
-        if (!file) {
-          throw new Error(
-            "Please attach your CV (PDF, DOC or DOCX)."
-          );
-        }
-
-        const ext = file.name
-          .split(".")
-          .pop()
-          ?.toLowerCase();
-
-        if (
-          !ext ||
-          !["pdf", "doc", "docx"].includes(ext)
-        ) {
-          throw new Error(
-            "CV must be a PDF, DOC or DOCX file."
-          );
-        }
-
-        if (file.size > MAX_CV_BYTES) {
-          throw new Error(
-            "CV must be smaller than 10 MB."
-          );
-        }
-
-        const path = `${user.id}/${Date.now()}-${file.name.replace(
-          /[^\w.-]/g,
-          "_"
-        )}`;
-
-        const { error: uploadError } =
-          await supabase.storage
-            .from("cvs")
-            .upload(path, file, {
-              upsert: true,
-            });
-
-        if (uploadError) {
-          throw new Error(
-            "Could not upload your CV. Please try again."
-          );
-        }
-
-        cvPath = path;
-      }
-
-      const { error } =
-        await supabase
-          .from("applications")
-          .insert({
-            job_id: jobId,
-            applicant_id: user.id,
-            full_name: fullName,
-            email,
-            phone: phone || null,
-            cover_letter:
-              form.cover_letter.trim() ||
-              null,
-            cv_url: cvPath,
-            status: "applied",
-          });
-
-      if (error) {
-        if (error.code === "23505") {
-          throw new Error(
-            "You have already applied for this job."
-          );
-        }
-
+      if (useSavedCv && savedCv) {
         throw new Error(
-          "Could not submit your application. Please try again."
+          "Please upload your CV again before applying."
         );
       }
+
+      if (!file) {
+        throw new Error(
+          "Please attach your CV (PDF, DOC or DOCX)."
+        );
+      }
+
+      return submitApplication({
+        jobId,
+        fullName,
+        email,
+        phone: phone || null,
+        coverLetter: form.cover_letter.trim() || null,
+        cvFile: file,
+      });
     },
 
     onSuccess: () => {
