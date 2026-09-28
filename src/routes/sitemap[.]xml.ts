@@ -27,7 +27,7 @@ function urlEntry(loc: string, lastmod?: string, priority = "0.5", changefreq = 
 }
 
 async function approvedJobs(): Promise<Array<{ id: string; created_at: string }>> {
-  const url = process.env["SUPABASE_URL"] ?? "https://dcwkycbttaopqevmlqbn.supabase.co";
+  const url = process.env["SUPABASE_URL"] ?? "https://ctkvctwatqultmbygava.supabase.co";
   const key =
     process.env["SUPABASE_PUBLISHABLE_KEY"] ??
     "sb_publishable_3C6yP7c6YR37aCaUszAC2A_1q1E5pUL";

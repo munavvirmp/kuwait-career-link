@@ -379,28 +379,22 @@ Output requirements:
 - Keep array items concise.
 `;
 
-    const response = await fetch("http://localhost:11434/api/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "qwen2.5-coder:3b",
+    const { data: geminiData, error: geminiError } = await supabase.functions.invoke("gemini-ai", {
+      body: {
         prompt,
-        stream: false,
-      }),
+      },
     });
 
-    if (!response.ok) {
-      throw new Error(`Ollama request failed: ${response.status}`);
+    if (geminiError) {
+      throw new Error(`Gemini function request failed: ${geminiError.message}`);
     }
 
-    const result = (await response.json()) as {
-      response?: string;
-    };
+    if (!geminiData?.success) {
+      throw new Error(geminiData?.error ?? "Gemini request failed");
+    }
 
     return {
       success: true,
-      result: result.response ?? "",
+      result: geminiData.result ?? "",
     };
   });

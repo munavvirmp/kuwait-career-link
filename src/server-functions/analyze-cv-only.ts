@@ -1724,65 +1724,29 @@ CV END
 ==================================================
 `;
 
-      let response: Response;
+      const { data: geminiData, error: geminiError } =
+        await supabase.functions.invoke("gemini-ai", {
+          body: {
+            prompt,
+          },
+        });
 
-      try {
-        response =
-          await fetch(
-            "http://localhost:11434/api/generate",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-              body: JSON.stringify({
-                model:
-                  "qwen2.5-coder:3b",
-                prompt,
-                stream: false,
-                options: {
-                  temperature: 0.1,
-                },
-              }),
-            }
-          );
-      } catch {
+      if (geminiError) {
         throw new Error(
-          "Cannot connect to Ollama. Make sure Ollama is running on your computer."
+          `Gemini function request failed: ${geminiError.message}`
         );
       }
 
-      if (!response.ok) {
+      if (!geminiData?.success) {
         throw new Error(
-          `Ollama request failed: ${response.status}`
+          geminiData?.error ?? "Gemini request failed"
         );
       }
 
-      let ollamaResult: {
-        response?: string;
+      return {
+        success: true,
+        result: geminiData.result ?? "",
       };
-
-      try {
-        ollamaResult =
-          (await response.json()) as {
-            response?: string;
-          };
-      } catch {
-        throw new Error(
-          "Ollama returned an invalid response."
-        );
-      }
-
-      const raw =
-        ollamaResult.response
-          ?.trim() || "";
-
-      if (!raw) {
-        throw new Error(
-          "AI returned an empty response. Please try again."
-        );
-      }
 
       let parsed: Record<
         string,

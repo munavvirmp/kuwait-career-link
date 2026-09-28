@@ -5,7 +5,7 @@ import type { Database } from "./types";
 // protected by Row Level Security). They act as a fallback so the app never fails
 // to boot when the build environment does not inline the VITE_ variables — which
 // previously crashed server-side rendering in production.
-const FALLBACK_SUPABASE_URL = "https://dcwkycbttaopqevmlqbn.supabase.co";
+const FALLBACK_SUPABASE_URL = "https://ctkvctwatqultmbygava.supabase.co";
 const FALLBACK_SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_3C6yP7c6YR37aCaUszAC2A_1q1E5pUL";
 

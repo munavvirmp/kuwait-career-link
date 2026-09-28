@@ -311,46 +311,31 @@ JOB DESCRIPTION:
 ${jobDescription}
 `;
 
-  let response: Response;
-
-  try {
-    response = await fetch("http://localhost:11434/api/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "qwen2.5-coder:3b",
+  const { data: geminiData, error: geminiError } =
+    await supabase.functions.invoke("gemini-ai", {
+      body: {
         prompt,
-        stream: false,
-        options: {
-          temperature: 0.1,
-        },
-      }),
+      },
     });
-  } catch {
+
+  if (geminiError) {
     throw new Error(
-      "Unable to connect to Ollama. Please make sure Ollama is running."
+      `Gemini function request failed: ${geminiError.message}`
     );
   }
 
-  if (!response.ok) {
-    throw new Error(`Ollama request failed: ${response.status}`);
+  if (!geminiData?.success) {
+    throw new Error(
+      geminiData?.error ?? "Gemini request failed"
+    );
   }
 
-  const result = (await response.json()) as {
-    response?: string;
-    error?: string;
-  };
-
-  if (result.error) {
-    throw new Error(`Ollama error: ${result.error}`);
-  }
-
-  const rawResponse = result.response?.trim();
+  const rawResponse = geminiData.result?.trim() || "";
 
   if (!rawResponse) {
-    throw new Error("Ollama returned an empty response");
+    throw new Error(
+      "AI returned an empty response. Please try again."
+    );
   }
 
   const parsed = parseJsonResponse(rawResponse);

@@ -57,7 +57,9 @@ export const extractPdfText = createServerFn({ method: "POST" })
 
       if (rateLimitError) {
         console.error("AI rate-limit check failed:", rateLimitError);
-        throw new Error("Unable to process PDF.");
+        throw new Error(
+          `AI rate-limit check failed: ${rateLimitError.message ?? "Unknown error"}`
+        );
       }
 
       if (!allowed) {

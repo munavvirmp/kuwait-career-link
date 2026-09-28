@@ -230,8 +230,7 @@ Responsibilities:
               </p>
 
               <p className="mt-1 text-muted-foreground">
-                This may take a little time because the local Ollama model is
-                processing the vacancy.
+                This may take a little time while Gemini AI processes the vacancy.
               </p>
             </div>
           )}
