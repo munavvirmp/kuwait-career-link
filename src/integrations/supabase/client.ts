@@ -7,7 +7,7 @@ import type { Database } from "./types";
 // previously crashed server-side rendering in production.
 const FALLBACK_SUPABASE_URL = "https://ctkvctwatqultmbygava.supabase.co";
 const FALLBACK_SUPABASE_PUBLISHABLE_KEY =
-  "sb_publishable_3C6yP7c6YR37aCaUszAC2A_1q1E5pUL";
+  "sb_publishable_eE4ENSTkYmZA8ORdBmtQcA_DGs8rw4e";
 
 function readServerEnv(name: string): string | undefined {
   try {
