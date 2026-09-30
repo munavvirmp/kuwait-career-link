@@ -379,7 +379,7 @@ Output requirements:
 - Keep array items concise.
 `;
 
-    const { data: geminiData, error: geminiError } = await supabase.functions.invoke("gemini-ai", {
+    const { data: geminiData, error: geminiError } = await context.supabase.functions.invoke("gemini-ai", {
       body: {
         prompt,
       },
