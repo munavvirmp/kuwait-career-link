@@ -176,3 +176,17 @@
 @utility shadow-elevated {
   box-shadow: var(--shadow-elevated);
 }
+
+/* Responsive and accessibility polish for the existing Kuwait Career Link app */
+:root { --radius: 1rem; }
+html { scroll-behavior: smooth; }
+body { min-width: 320px; }
+:focus-visible { outline: 3px solid var(--color-ring); outline-offset: 3px; }
+::selection { background: var(--color-primary); color: var(--color-primary-foreground); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+@media (max-width: 640px) {
+  input, select, textarea { font-size: 16px; }
+  main { overflow-wrap: anywhere; }
+}
