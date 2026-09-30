@@ -1725,11 +1725,11 @@ CV END
 `;
 
       const { data: geminiData, error: geminiError } =
-        await supabase.functions.invoke("gemini-ai", {
-          body: {
-            prompt,
-          },
-        });
+        await context.supabase.functions.invoke("gemini-ai", {
+  body: {
+    prompt,
+  },
+});
 
       if (geminiError) {
         throw new Error(
